@@ -15,7 +15,7 @@
   import { drawSnipRect, drawLockedSnip } from '$lib/render/drawSnipRect';
   import { drawBoard } from '$lib/render/drawPuzzle';
   import { drawCursor } from '$lib/render/drawCursor';
-  import type { Frame, Hand } from '$lib/vision/types';
+  import type { Frame, Hand, PlayerHands, PlayerId } from '$lib/vision/types';
   import type { HandGesture, GestureSnapshot } from '$lib/game/state';
   import { preloadSfx, playSfx } from '$lib/audio/sfx';
   import { playMusic } from '$lib/audio/music';
@@ -62,15 +62,39 @@
     };
   }
 
+  // Solve phase rule: each player uses ONE hand to slide pieces. When both
+  // hands are visible in a player's half, pick the one closest to that
+  // player's board horizontally — the hand reaching toward the puzzle.
+  // Collapse it into the `left` slot and null the other so the existing
+  // pinch + cursor logic naturally tracks a single hand per player.
+  function pickSolveHand(hands: PlayerHands, player: PlayerId): PlayerHands {
+    if (!hands.left && !hands.right) return { left: null, right: null };
+    if (!hands.left && hands.right) return { left: hands.right, right: null };
+    if (hands.left && !hands.right) return { left: hands.left, right: null };
+    const area = getBoardArea(player);
+    const center = area.x + area.w / 2;
+    const lc = getCursorPoint(hands.left!);
+    const rc = getCursorPoint(hands.right!);
+    return Math.abs(lc.x - center) <= Math.abs(rc.x - center)
+      ? { left: hands.left, right: null }
+      : { left: hands.right, right: null };
+  }
+
   function framesToGestures(f: Frame, dt: number): GestureSnapshot {
+    let p1Hands = f.players.p1;
+    let p2Hands = f.players.p2;
+    if (game.state.phase === 'solve') {
+      p1Hands = pickSolveHand(p1Hands, 'p1');
+      p2Hands = pickSolveHand(p2Hands, 'p2');
+    }
     return {
       p1: {
-        left: handToGesture(f.players.p1.left, 'p1.left', dt),
-        right: handToGesture(f.players.p1.right, 'p1.right', dt)
+        left: handToGesture(p1Hands.left, 'p1.left', dt),
+        right: handToGesture(p1Hands.right, 'p1.right', dt)
       },
       p2: {
-        left: handToGesture(f.players.p2.left, 'p2.left', dt),
-        right: handToGesture(f.players.p2.right, 'p2.right', dt)
+        left: handToGesture(p2Hands.left, 'p2.left', dt),
+        right: handToGesture(p2Hands.right, 'p2.right', dt)
       }
     };
   }
