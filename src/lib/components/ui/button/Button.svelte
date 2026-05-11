@@ -19,8 +19,8 @@
     default:
       'bg-[var(--color-primary)] text-[var(--color-bg)] hover:brightness-110 active:brightness-95',
     outline:
-      'border-2 border-[var(--color-ink)]/30 text-[var(--color-ink)] hover:bg-[var(--color-ink)]/10',
-    ghost: 'text-[var(--color-ink)] hover:bg-[var(--color-ink)]/10'
+      'border-2 border-[var(--color-bg)]/30 text-[var(--color-bg)] hover:bg-[var(--color-bg)]/10',
+    ghost: 'text-[var(--color-bg)] hover:bg-[var(--color-bg)]/10'
   };
 
   const sizes: Record<Size, string> = {
