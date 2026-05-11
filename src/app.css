@@ -10,9 +10,17 @@
 }
 
 :root {
-  --color-p1: oklch(0.75 0.18 30);
-  --color-p2: oklch(0.7 0.18 235);
-  --color-accent: oklch(0.85 0.2 90);
+  --color-bg: oklch(0.97 0.02 80);            /* warm cream / offwhite */
+  --color-ink: oklch(0.22 0.03 50);           /* warm charcoal */
+  --color-primary: oklch(0.74 0.19 50);       /* bright orange */
+  --color-p1: var(--color-primary);
+  --color-p2: oklch(0.65 0.18 245);           /* vivid blue */
+  --color-accent-green: oklch(0.78 0.18 145);
+  --color-accent-yellow: oklch(0.88 0.18 95);
+  --color-canvas-bg: var(--color-ink);
+  /* Back-compat: the existing `--color-accent` is now an alias of yellow,
+     so any inherited screens that still read it keep working. */
+  --color-accent: var(--color-accent-yellow);
 }
 
 html, body {
@@ -23,7 +31,7 @@ html, body {
   font-feature-settings: 'ss01' on;
 }
 body {
-  background: oklch(0.18 0.02 270);
+  background: var(--color-canvas-bg);
   color: oklch(0.96 0 0);
 }
 
@@ -31,4 +39,11 @@ body {
 @keyframes wobble-tilt {
   0%, 100% { transform: rotate(-2deg); }
   50% { transform: rotate(2deg); }
+}
+
+/* Used by Splash + any "menu" screen that wants the cream background.
+   Keeps body itself dark so the in-game canvas inherits naturally. */
+.splash-bg {
+  background: var(--color-bg);
+  color: var(--color-ink);
 }
