@@ -47,3 +47,35 @@ body {
   background: var(--color-bg);
   color: var(--color-ink);
 }
+
+/* === Splash idle-loop keyframes === */
+
+@keyframes splash-hand-pinch {
+  0%, 70%, 100% { transform: scaleX(var(--scale-x, 1)) scale(1) rotate(0deg); }
+  80% { transform: scaleX(var(--scale-x, 1)) scale(0.92) rotate(4deg); }
+  90% { transform: scaleX(var(--scale-x, 1)) scale(1.02) rotate(-2deg); }
+}
+
+@keyframes splash-char-bob {
+  0%, 100% { transform: scaleX(var(--scale-x, 1)) translateY(0); }
+  50% { transform: scaleX(var(--scale-x, 1)) translateY(-4px); }
+}
+
+@keyframes splash-cta-pulse {
+  0%, 100% { opacity: 0.92; filter: brightness(1); }
+  50% { opacity: 1; filter: brightness(1.06); }
+}
+
+@keyframes splash-accent-shift {
+  0%, 100% { background: linear-gradient(90deg, var(--color-accent-green), var(--color-accent-yellow)); }
+  50%      { background: linear-gradient(90deg, var(--color-accent-yellow), var(--color-accent-green)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-idle-hand,
+  .splash-idle-char,
+  .splash-idle-cta,
+  .splash-idle-accent {
+    animation: none !important;
+  }
+}

@@ -101,7 +101,7 @@
       </span>
     </div>
     <div
-      class="h-1 w-32 rounded-full"
+      class="splash-idle-accent h-1 w-32 rounded-full"
       style="background: linear-gradient(90deg, var(--color-accent-green), var(--color-accent-yellow));"
       data-splash-accent-bar
     ></div>
@@ -110,8 +110,8 @@
   <!-- (2) Hero: framing hands + title -->
   <div class="flex-1 flex items-center justify-center gap-6 md:gap-10 px-6" data-splash-hero>
     <div
-      class="w-24 md:w-36 lg:w-44 shrink-0"
-      style="color: var(--color-p1); transform: scaleX(-1);"
+      class="splash-idle-hand w-24 md:w-36 lg:w-44 shrink-0"
+      style="color: var(--color-p1); --scale-x: -1;"
       data-splash-hand="left"
       aria-hidden="true"
     >
@@ -136,8 +136,8 @@
     </h1>
 
     <div
-      class="w-24 md:w-36 lg:w-44 shrink-0"
-      style="color: var(--color-p2);"
+      class="splash-idle-hand w-24 md:w-36 lg:w-44 shrink-0"
+      style="color: var(--color-p2); --scale-x: 1; animation-delay: 1.75s;"
       data-splash-hand="right"
       aria-hidden="true"
     >
@@ -157,19 +157,43 @@
   <!-- (4) Characters + (5) CTA -->
   <footer class="grid grid-cols-3 items-end gap-6 px-8 pb-8 md:px-16 md:pb-12">
     <div class="flex justify-start" data-splash-char="p1" aria-hidden="true">
-      <div class="w-32 md:w-44 lg:w-56" style="color: var(--color-p1);">
+      <div
+        class="splash-idle-char w-32 md:w-44 lg:w-56"
+        style="color: var(--color-p1); --scale-x: 1;"
+      >
         {@html playerSvg}
       </div>
     </div>
 
-    <div class="flex justify-center" data-splash-cta>
+    <div class="splash-idle-cta flex justify-center" data-splash-cta>
       <Button size="lg" onclick={advance}>Press SPACE to play</Button>
     </div>
 
     <div class="flex justify-end" data-splash-char="p2" aria-hidden="true">
-      <div class="w-32 md:w-44 lg:w-56" style="color: var(--color-p2); transform: scaleX(-1);">
+      <div
+        class="splash-idle-char w-32 md:w-44 lg:w-56"
+        style="color: var(--color-p2); --scale-x: -1; animation-delay: 2s;"
+      >
         {@html playerSvg}
       </div>
     </div>
   </footer>
 </section>
+
+<style>
+  /* Idle loops — start after the entry timeline finishes (~1.3s). */
+  .splash-idle-hand {
+    animation: splash-hand-pinch 3500ms ease-in-out 1300ms infinite;
+    transform-origin: center center;
+  }
+  :global([data-splash-char="p1"]) .splash-idle-char,
+  :global([data-splash-char="p2"]) .splash-idle-char {
+    animation: splash-char-bob 4000ms ease-in-out infinite;
+  }
+  .splash-idle-cta {
+    animation: splash-cta-pulse 2000ms ease-in-out 1500ms infinite;
+  }
+  .splash-idle-accent {
+    animation: splash-accent-shift 6000ms ease-in-out infinite;
+  }
+</style>
