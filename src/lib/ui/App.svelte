@@ -14,7 +14,7 @@
   import { drawHandLandmarks } from '$lib/render/drawLandmarks';
   import { drawSnipRect, drawLockedSnip } from '$lib/render/drawSnipRect';
   import { drawBoard } from '$lib/render/drawPuzzle';
-  import { drawCursor } from '$lib/render/drawCursor';
+  import { drawCursor, drawPointer } from '$lib/render/drawCursor';
   import type { Frame, Hand, PlayerHands, PlayerId } from '$lib/vision/types';
   import type { HandGesture, GestureSnapshot } from '$lib/game/state';
   import { preloadSfx, playSfx } from '$lib/audio/sfx';
@@ -227,23 +227,36 @@
       }
     }
 
-    // Cursor overlay on each player's hands during snip + solve phases.
-    if ((game.state.phase === 'snip' || game.state.phase === 'solve') && lastGestures) {
-      const p1Color = '#ff8a5b';
-      const p2Color = '#5bb8ff';
-      const p1Name = game.state.phase === 'solve' ? game.state.p1.name : game.state.p1Name;
-      const p2Name = game.state.phase === 'solve' ? game.state.p2.name : game.state.p2Name;
-      for (const [side, color, name] of [
-        ['p1', p1Color, p1Name] as const,
-        ['p2', p2Color, p2Name] as const
-      ]) {
-        const hands = lastGestures[side];
-        for (const slot of ['left', 'right'] as const) {
-          const h = hands[slot];
+    // Hand overlay differs per phase.
+    if (lastGestures) {
+      const p1Color = '#ff8a5b'; // red-ish (P1)
+      const p2Color = '#5bb8ff'; // blue (P2)
+      if (game.state.phase === 'snip') {
+        const p1Name = game.state.p1Name;
+        const p2Name = game.state.p2Name;
+        for (const [side, color, name] of [
+          ['p1', p1Color, p1Name] as const,
+          ['p2', p2Color, p2Name] as const
+        ]) {
+          const hands = lastGestures[side];
+          for (const slot of ['left', 'right'] as const) {
+            const h = hands[slot];
+            if (!h.present) continue;
+            const showLabel = slot === 'left' && (h.pinch === 'holding' || h.pinch === 'pinching');
+            drawCursor(ctx, h.cursor, h.pinch, color, showLabel ? name : undefined);
+          }
+        }
+      } else if (game.state.phase === 'solve') {
+        // One hand per player (collapsed into the left slot by pickSolveHand).
+        // Pointer sits on the index fingertip; selection ring lights up when pinched.
+        for (const [side, color] of [
+          ['p1', p1Color] as const,
+          ['p2', p2Color] as const
+        ]) {
+          const h = lastGestures[side].left;
           if (!h.present) continue;
-          // Show the player tag once per side, on whichever hand is most engaged.
-          const showLabel = slot === 'left' && (h.pinch === 'holding' || h.pinch === 'pinching');
-          drawCursor(ctx, h.cursor, h.pinch, color, showLabel ? name : undefined);
+          const selected = h.pinch === 'pinching' || h.pinch === 'holding';
+          drawPointer(ctx, h.cursor, selected, color);
         }
       }
     }

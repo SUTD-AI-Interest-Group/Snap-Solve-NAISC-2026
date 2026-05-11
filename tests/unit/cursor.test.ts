@@ -10,9 +10,9 @@ function hand(thumb: [number, number], index: [number, number]): Hand {
 }
 
 describe('getCursorPoint', () => {
-  it('returns midpoint of thumb tip and index tip', () => {
+  it('returns the index fingertip position', () => {
     const p = getCursorPoint(hand([0.2, 0.4], [0.6, 0.8]));
-    expect(p.x).toBeCloseTo(0.4);
-    expect(p.y).toBeCloseTo(0.6);
+    expect(p.x).toBeCloseTo(0.6);
+    expect(p.y).toBeCloseTo(0.8);
   });
 });
