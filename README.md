@@ -46,12 +46,23 @@ src/lib/
 
 ## Audio
 
-Audio files in `static/audio/` ship as zero-byte placeholders. Replace them with real SFX (≤ 1 s each) and music loops before the conference. The audio module gracefully no-ops on missing assets so the game is fully playable without them.
+Audio files in `static/audio/` are real assets (no longer zero-byte placeholders). All are public-domain / CC0 — no attribution required, but credit is listed below for the curious.
 
-Required filenames:
-- `pinch.mp3`, `slide.mp3`, `countdown-tick.mp3`, `countdown-go.mp3`
-- `win-fanfare.mp3`, `draw.mp3`, `timeup.mp3`
-- `lobby-loop.mp3`, `gameplay-loop.mp3`
+| File | Source | License |
+| --- | --- | --- |
+| `pinch.mp3` (click_005) | [Kenney — Interface Sounds](https://kenney.nl/assets/interface-sounds) | CC0 |
+| `slide.mp3` (switch_007) | Kenney — Interface Sounds | CC0 |
+| `countdown-tick.mp3` (tick_002) | Kenney — Interface Sounds | CC0 |
+| `countdown-go.mp3` (confirmation_004) | Kenney — Interface Sounds | CC0 |
+| `win-fanfare.mp3` (confirmation_002) | Kenney — Interface Sounds | CC0 |
+| `draw.mp3` (bong_001) | Kenney — Interface Sounds | CC0 |
+| `timeup.mp3` (error_005) | Kenney — Interface Sounds | CC0 |
+| `gameplay-loop.mp3` | ["Chiptune Battle Music" by pmiller](https://opengameart.org/content/chiptune-battle-music) on OpenGameArt | CC0 |
+| `lobby-loop.mp3` | same source, transcoded with `atempo=0.85, volume=-4dB` for a mellower lobby feel | CC0 |
+
+The audio module gracefully no-ops on any missing or undecodable asset, so the game stays playable even with files removed.
+
+To replace with new tracks, drop a new file at the same path. The interface looks them up by filename in `src/lib/audio/assets.ts`.
 
 ## Deploy
 
