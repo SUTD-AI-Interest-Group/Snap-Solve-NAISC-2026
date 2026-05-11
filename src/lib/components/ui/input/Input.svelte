@@ -13,7 +13,7 @@
 <input
   bind:value
   class={cn(
-    'flex h-10 w-full rounded-xl border-2 border-white/20 bg-white/5 px-4 py-2 text-base text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--color-accent)] transition-colors',
+    'flex h-10 w-full rounded-xl border-2 border-[var(--color-ink)]/25 bg-white px-4 py-2 text-base text-[var(--color-ink)] placeholder:text-[var(--color-ink)]/40 focus:outline-none focus:border-[var(--color-primary)] focus:ring-4 focus:ring-[var(--color-primary)]/20 shadow-[0_2px_0_rgba(34,27,22,0.12)] transition-all',
     className
   )}
   {...rest}

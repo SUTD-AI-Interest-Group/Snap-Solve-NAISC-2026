@@ -34,11 +34,25 @@
   <div class="grid grid-cols-2 gap-12 w-full max-w-3xl px-6">
     <div class="flex flex-col gap-3">
       <label for="p1" class="font-display text-3xl md:text-4xl tracking-wide" style="color: var(--color-p1)">Player 1</label>
-      <Input id="p1" bind:value={p1} maxlength={12} placeholder="Nickname" class="font-sans text-2xl py-6 h-16" onkeydown={onKeydown} />
+      <Input
+        id="p1"
+        bind:value={p1}
+        maxlength={12}
+        placeholder="Nickname"
+        class="font-sans text-2xl py-6 h-16 border-[var(--color-p1)]/50 focus:border-[var(--color-p1)] focus:ring-[var(--color-p1)]/25"
+        onkeydown={onKeydown}
+      />
     </div>
     <div class="flex flex-col gap-3">
       <label for="p2" class="font-display text-3xl md:text-4xl tracking-wide" style="color: var(--color-p2)">Player 2</label>
-      <Input id="p2" bind:value={p2} maxlength={12} placeholder="Nickname" class="font-sans text-2xl py-6 h-16" onkeydown={onKeydown} />
+      <Input
+        id="p2"
+        bind:value={p2}
+        maxlength={12}
+        placeholder="Nickname"
+        class="font-sans text-2xl py-6 h-16 border-[var(--color-p2)]/50 focus:border-[var(--color-p2)] focus:ring-[var(--color-p2)]/25"
+        onkeydown={onKeydown}
+      />
     </div>
   </div>
   <Button size="lg" disabled={!canSubmit} onclick={submit}>Let's go!</Button>
