@@ -19,10 +19,10 @@
   </div>
   <div class="absolute top-4 left-6 flex items-baseline gap-3">
     <span class="font-display text-3xl md:text-4xl tracking-tight" style="color: var(--color-p1)">{p1?.name}</span>
-    <span class="font-mono text-base md:text-lg opacity-85" style="color: var(--color-p1)">{p1?.board.correctCount}/8</span>
+    <span class="font-mono text-base md:text-lg opacity-85" style="color: var(--color-p1)">{p1?.board.correctCount}/9</span>
   </div>
   <div class="absolute top-4 right-6 flex items-baseline gap-3">
-    <span class="font-mono text-base md:text-lg opacity-85" style="color: var(--color-p2)">{p2?.board.correctCount}/8</span>
+    <span class="font-mono text-base md:text-lg opacity-85" style="color: var(--color-p2)">{p2?.board.correctCount}/9</span>
     <span class="font-display text-3xl md:text-4xl tracking-tight" style="color: var(--color-p2)">{p2?.name}</span>
   </div>
 </div>

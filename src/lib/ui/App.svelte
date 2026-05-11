@@ -168,11 +168,11 @@
     };
   }
 
-  // Solve phase rule: each player uses ONE hand to slide pieces. When both
-  // hands are visible in a player's half, pick the one closest to that
-  // player's board horizontally — the hand reaching toward the puzzle.
-  // Collapse it into the `left` slot and null the other so the existing
-  // pinch + cursor logic naturally tracks a single hand per player.
+  // Solve phase rule: each player uses ONE hand to drag and swap pieces.
+  // When both hands are visible in a player's half, pick the one closest
+  // to that player's board horizontally — the hand reaching toward the
+  // puzzle. Collapse it into the `left` slot and null the other so the
+  // existing pinch + cursor logic naturally tracks a single hand per player.
   function pickSolveHand(hands: PlayerHands, player: PlayerId): PlayerHands {
     if (!hands.left && !hands.right) return { left: null, right: null };
     if (!hands.left && hands.right) return { left: hands.right, right: null };
