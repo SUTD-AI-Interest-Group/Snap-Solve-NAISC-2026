@@ -16,6 +16,38 @@ export function drawBoard(
   ctx.fillRect(area.x - 8, area.y - 8, area.w + 16, area.h + 16);
   ctx.restore();
 
+  // Origin placeholder: when a piece is lifted, render a dashed outline on
+  // the cell it came from so the player can see where to drop it back to
+  // cancel.
+  const heldOriginCell = board.heldBy != null ? board.heldPieceCell : -1;
+  if (heldOriginCell >= 0) {
+    const oc = heldOriginCell % 3;
+    const or = Math.floor(heldOriginCell / 3);
+    const ox = area.x + oc * cellW;
+    const oy = area.y + or * cellH;
+    ctx.save();
+    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.strokeRect(ox + 4, oy + 4, cellW - 8, cellH - 8);
+    ctx.restore();
+  }
+
+  // Target glow: while a piece is held, the cell the cursor is currently
+  // over (if any, and different from origin) gets a bright glowing ring in
+  // the player's tint — tells the player "release here to swap."
+  let targetCell = -1;
+  if (board.heldBy != null && board.heldCursor) {
+    const tx = board.heldCursor.x;
+    const ty = board.heldCursor.y;
+    if (tx >= 0 && tx <= 1 && ty >= 0 && ty <= 1) {
+      const tc = Math.max(0, Math.min(2, Math.floor(tx * 3)));
+      const tr = Math.max(0, Math.min(2, Math.floor(ty * 3)));
+      const idx = tr * 3 + tc;
+      if (idx !== heldOriginCell) targetCell = idx;
+    }
+  }
+
   for (let i = 0; i < 9; i++) {
     const id = board.cells[i];
     const c = i % 3;
@@ -23,6 +55,15 @@ export function drawBoard(
     const x = area.x + c * cellW;
     const y = area.y + r * cellH;
     if (board.heldPieceCell === i && board.heldBy != null) continue;
+    if (i === targetCell) {
+      ctx.save();
+      ctx.strokeStyle = highlightColor;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = highlightColor;
+      ctx.shadowBlur = 18;
+      ctx.strokeRect(x - 2, y - 2, cellW + 4, cellH + 4);
+      ctx.restore();
+    }
     drawPiece(ctx, pieces[id], { x, y, w: cellW, h: cellH }, {
       isCorrect: id === i,
       highlightColor
