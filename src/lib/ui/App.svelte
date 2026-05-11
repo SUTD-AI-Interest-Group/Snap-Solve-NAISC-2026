@@ -31,11 +31,115 @@
   import PauseMenu from './PauseMenu.svelte';
 
   let cam: WebcamHandle | null = null;
+  let stopLoop: (() => void) | null = null;
   let permError = $state<string | null>(null);
+  let trackingError = $state<string | null>(null);
+  let initializing = $state(true);
+  let initToken = 0;
   let canvas: HTMLCanvasElement | undefined = $state();
   let lastFrame: Frame | null = null;
   let lastGestures: GestureSnapshot | null = null;
   let snipCaptureInProgress = false;
+
+  function describeCameraError(e: unknown): string {
+    const err = e as { name?: string; message?: string } | null;
+    const name = err?.name ?? 'Error';
+    switch (name) {
+      case 'NotAllowedError':
+      case 'PermissionDeniedError':
+        return 'Camera access was denied. Open the site settings in your browser, set Camera to Allow, then click Retry.';
+      case 'NotFoundError':
+      case 'DevicesNotFoundError':
+        return 'No camera detected. Connect a webcam and click Retry.';
+      case 'NotReadableError':
+      case 'TrackStartError':
+        return 'The camera is busy — another app or tab is using it. Close it and click Retry.';
+      case 'OverconstrainedError':
+        return 'This camera does not support the requested settings. Try a different camera.';
+      case 'AbortError':
+        return 'Camera start was interrupted. Click Retry.';
+      case 'SecurityError':
+        return 'Camera access blocked by the browser (requires HTTPS or localhost).';
+      default:
+        return `Camera error (${name}): ${err?.message ?? 'unknown'}. Click Retry.`;
+    }
+  }
+
+  async function init() {
+    const myToken = ++initToken;
+    permError = null;
+    trackingError = null;
+    initializing = true;
+
+    // Tear down any partial state from a previous attempt.
+    stopLoop?.();
+    stopLoop = null;
+    cam?.stop();
+    cam = null;
+
+    // 1. Audio (best-effort, never fatal).
+    try {
+      await preloadSfx();
+      playMusic('lobby');
+    } catch (e) {
+      console.warn('audio init failed (continuing):', e);
+    }
+    if (myToken !== initToken) return;
+
+    // 2. Camera — this is the only step that legitimately maps to "camera access needed".
+    try {
+      cam = await openWebcam();
+    } catch (e) {
+      if (myToken !== initToken) return;
+      permError = describeCameraError(e);
+      initializing = false;
+      return;
+    }
+    if (myToken !== initToken) {
+      cam?.stop();
+      cam = null;
+      return;
+    }
+
+    // 3. MediaPipe — wasm + model load. Separate error category.
+    try {
+      await initHandLandmarker(4);
+    } catch (e) {
+      if (myToken !== initToken) return;
+      const msg = (e as { message?: string } | null)?.message ?? String(e);
+      trackingError = `Hand tracking failed to load: ${msg}. Check your internet connection and click Retry.`;
+      cam?.stop();
+      cam = null;
+      initializing = false;
+      return;
+    }
+    if (myToken !== initToken) {
+      cam?.stop();
+      cam = null;
+      return;
+    }
+
+    // 4. Start the frame loop.
+    stopLoop = startFrameLoop({
+      video: cam.video,
+      onFrame: (frame, dt) => {
+        const gestures = framesToGestures(frame, dt);
+        lastFrame = frame;
+        lastGestures = gestures;
+        if (!paused.value) {
+          game.state = gameTick(game.state, { type: 'tick', dtMs: dt }, gestures);
+          reactAudio();
+          maybeCaptureLockedSnips();
+        }
+        draw();
+      }
+    });
+    initializing = false;
+  }
+
+  function retry() {
+    init();
+  }
 
   const pinches: Record<string, PinchState> = {
     'p1.left': { kind: 'idle', heldMs: 0 },
@@ -323,38 +427,10 @@
   }
 
   onMount(() => {
-    let stopLoop: (() => void) | null = null;
-    let aborted = false;
     window.addEventListener('keydown', onKeydown);
-
-    (async () => {
-      try {
-        await preloadSfx();
-        playMusic('lobby');
-        cam = await openWebcam();
-        await initHandLandmarker(4);
-        if (aborted) return;
-        stopLoop = startFrameLoop({
-          video: cam.video,
-          onFrame: (frame, dt) => {
-            const gestures = framesToGestures(frame, dt);
-            lastFrame = frame;
-            lastGestures = gestures;
-            if (!paused.value) {
-              game.state = gameTick(game.state, { type: 'tick', dtMs: dt }, gestures);
-              reactAudio();
-              maybeCaptureLockedSnips();
-            }
-            draw();
-          }
-        });
-      } catch (e: any) {
-        permError = e?.message ?? String(e);
-      }
-    })();
-
+    init();
     return () => {
-      aborted = true;
+      initToken++; // cancel any in-flight init
       stopLoop?.();
       cam?.stop();
       window.removeEventListener('keydown', onKeydown);
@@ -366,12 +442,28 @@
 
 <MuteButton />
 
-{#if permError}
-  <div class="absolute inset-0 flex items-center justify-center z-50 bg-black/80">
-    <div class="bg-black/90 border-2 border-white/20 p-10 rounded-2xl max-w-md text-center">
-      <h3 class="text-3xl font-black mb-4">Camera access needed</h3>
-      <p class="opacity-80">{permError}</p>
-      <button class="mt-6 px-6 py-3 bg-white text-black rounded-xl font-bold" onclick={() => location.reload()}>Retry</button>
+{#if permError || trackingError}
+  <div class="absolute inset-0 flex items-center justify-center z-50 bg-black/85 backdrop-blur-sm">
+    <div class="bg-black/90 border-2 border-white/20 p-10 rounded-2xl max-w-lg text-center">
+      <h3 class="font-display text-4xl mb-4 tracking-tight" style="color: var(--color-accent);">
+        {permError ? 'Camera access needed' : 'Setup error'}
+      </h3>
+      <p class="font-sans text-base md:text-lg opacity-85 leading-relaxed">{permError ?? trackingError}</p>
+      <div class="mt-6 flex gap-3 justify-center">
+        <button
+          class="font-display tracking-wide px-6 py-3 bg-white text-black rounded-xl text-lg disabled:opacity-50"
+          disabled={initializing}
+          onclick={retry}
+        >
+          {initializing ? 'Trying…' : 'Retry'}
+        </button>
+        <button
+          class="font-display tracking-wide px-6 py-3 border-2 border-white/30 rounded-xl text-lg"
+          onclick={() => location.reload()}
+        >
+          Reload page
+        </button>
+      </div>
     </div>
   </div>
 {:else}
