@@ -52,12 +52,12 @@
       // (3) Framing hands swing in from off-screen
       tl.add(
         '[data-splash-hand="left"]',
-        { opacity: [0, 1], translateX: [-200, 0], rotate: [-20, 0], duration: 600 },
+        { opacity: [0, 1], translateX: [-200, 0], rotate: [-20, 0], scaleX: [-1, -1], duration: 600 },
         400
       );
       tl.add(
         '[data-splash-hand="right"]',
-        { opacity: [0, 1], translateX: [200, 0], rotate: [20, 0], duration: 600 },
+        { opacity: [0, 1], translateX: [200, 0], rotate: [20, 0], scaleX: [1, 1], duration: 600 },
         400
       );
 
