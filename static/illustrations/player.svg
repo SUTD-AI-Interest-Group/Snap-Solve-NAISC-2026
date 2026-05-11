@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" fill="currentColor">
+  <title>Player character placeholder — swap for unDraw illustration before deploy</title>
+
+  <!-- Legs (left and right, slightly apart) -->
+  <rect x="62" y="195" width="28" height="65" rx="12" />
+  <rect x="110" y="195" width="28" height="65" rx="12" />
+
+  <!-- Feet (chunky, rounded) -->
+  <ellipse cx="76" cy="260" rx="18" ry="10" />
+  <ellipse cx="124" cy="260" rx="18" ry="10" />
+
+  <!-- Torso (chunky rounded rectangle) -->
+  <rect x="55" y="105" width="90" height="100" rx="22" />
+
+  <!-- Left arm (down at side) -->
+  <rect x="30" y="115" width="24" height="72" rx="11" />
+  <!-- Left hand (small ellipse) -->
+  <ellipse cx="42" cy="193" rx="12" ry="10" />
+
+  <!-- Right arm (raised — wave pose: rotated via transform) -->
+  <rect x="146" y="68" width="24" height="72" rx="11" transform="rotate(-30 158 68)" />
+  <!-- Right hand -->
+  <ellipse cx="172" cy="90" rx="12" ry="10" transform="rotate(-30 172 90)" />
+
+  <!-- Neck -->
+  <rect x="87" y="95" width="26" height="20" rx="8" />
+
+  <!-- Head (large friendly circle) -->
+  <circle cx="100" cy="68" r="40" />
+
+  <!-- Eyes (warm charcoal, stay dark regardless of tint) -->
+  <circle cx="87" cy="65" r="5" fill="#221b16" />
+  <circle cx="113" cy="65" r="5" fill="#221b16" />
+
+  <!-- Eye shines (tiny white highlight dots) -->
+  <circle cx="89" cy="63" r="1.8" fill="#ffffff" />
+  <circle cx="115" cy="63" r="1.8" fill="#ffffff" />
+
+  <!-- Tiny smile -->
+  <path d="M87 80 Q100 92 113 80" stroke="#221b16" stroke-width="3.5" fill="none" stroke-linecap="round" />
+</svg>
