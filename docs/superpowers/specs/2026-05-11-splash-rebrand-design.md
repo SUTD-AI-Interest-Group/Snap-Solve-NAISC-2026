@@ -53,9 +53,10 @@ The splash is a single full-viewport composition on the cream background, with f
 ### (2) Hero center — title + framing hands
 
 - "Snap & Solve" in Lilita One, solid `--color-primary` on `--color-bg`, slightly rotated per-letter keeping the existing kinetic character.
-- Two large stylized hand illustrations angle in from left and right, fingers in a pinch — literally framing the title (the snip mechanic visualized).
+- Two large hand icons from an icon pack angle in from left and right, fingers in a pinch — literally framing the title (the snip mechanic visualized).
 - Left hand tinted via `--color-p1`, right hand tinted via `--color-p2`.
-- Style: chunky line-art SVG, no realism, matching the Lilita One weight.
+- Source: **Phosphor icons** (`@phosphor-icons/core` or `phosphor-svelte`), bold or fill weight to match the chunky Lilita One weight. Candidate icons: `hand-pointing`, `hand-pinching`, `hand-palm`. The implementer picks the two that best read as a pinch gesture; the left/right variants are produced by mirroring the same icon with `transform: scaleX(-1)`.
+- Phosphor is chosen because it offers the widest set of hand-gesture icons in multiple weights. Lucide is an acceptable alternative if a future redesign standardizes on it.
 
 ### (3) Tagline
 
@@ -81,9 +82,9 @@ The splash is a single full-viewport composition on the cream background, with f
 ```
 ┌──────────────────────────────────────────────────┐
 │ [NAISC · SUTD]                                   │  (1)
-│   ▰▰▰▰ (green/yellow bar)                        │
+│   [-- accent bar (green/yellow) --]              │
 │                                                  │
-│      ✋ ── Snap & Solve ── 🤚                     │  (2)
+│      [hand]    Snap & Solve    [hand]            │  (2)
 │                                                  │
 │    Snip a picture · solve · beat your friend     │  (3)
 │                                                  │
@@ -109,7 +110,7 @@ Driven by anime.js v4 (already a dependency). No new libraries.
 
 ### Idle loop (after entry)
 
-- **Framing hands**: every ~3.5s, both hands do a single small pinch — thumb + index close together briefly (~250ms) then release. Slight phase offset left vs right.
+- **Framing hands**: every ~3.5s, both hands do a single "pinch beat" — a quick scale + rotate pulse (~250ms, e.g., scale 1.0 → 0.92 → 1.0 with a 4° rotation toward the title). If both `hand-palm` and `hand-pinching` icons are loaded, the beat can additionally cross-fade between the two for an explicit open→close→open feel. Slight phase offset left vs right.
 - **Cartoon characters**: 4s breathing bob (translate-y ±4px, ease-in-out), independent phase per character.
 - **Title**: no continuous animation — front-loaded drama, then still.
 - **CTA**: 2s pulse — opacity 0.85 → 1.0 (or soft outer glow).
@@ -152,13 +153,20 @@ Driven by anime.js v4 (already a dependency). No new libraries.
 
 ## Assets
 
-### Required new files in `static/illustrations/`
+### Cartoon characters — `static/illustrations/`
 
 - `player.svg` — single unDraw illustration of a chunky friendly cartoon person. Reused twice in the splash and tinted via CSS for P1 and P2. Specific illustration TBD; the implementer should pick from [unDraw illustrations](https://undraw.co/illustrations), prioritising the gaming / people / welcoming categories, choosing one where:
   - The figure is a single person (not a scene).
   - Pose is standing, ideally with a visible hand.
   - Style is chunky / geometric (matches the Lilita One title).
-- `hand-left.svg`, `hand-right.svg` — the two framing hands. Preferred source: unDraw if a suitable hand illustration is available; otherwise hand-authored simple SVGs. Pinch pose (thumb + index near-touching). Must be drawable as outline strokes so the pinch animation can manipulate finger positions cleanly.
+
+### Framing hands — icon pack
+
+- Pack: **Phosphor icons** (`@phosphor-icons/core` ships raw SVGs; `phosphor-svelte` ships Svelte components — implementer picks based on preferred integration). MIT licensed, free for commercial use.
+- Weight: **bold** or **fill** to match the chunky Lilita One title.
+- Candidate icons: `hand-pointing`, `hand-pinching`, `hand-palm`. The implementer picks the two that best read as a pinch gesture from each side.
+- The mirrored "right hand" is produced by applying `transform: scaleX(-1)` to the same icon — no second asset needed.
+- Tint via CSS `color: var(--color-p1)` / `var(--color-p2)`; Phosphor icons inherit `currentColor` by default, so no SVG editing required.
 
 ### unDraw integration approach
 
@@ -176,11 +184,13 @@ Driven by anime.js v4 (already a dependency). No new libraries.
 
 - **Contrast on warm-dark backgrounds**: P2 blue and accent green can both lose contrast against warm-dark. Implementer must verify with a contrast checker and nudge token lightness if needed.
 - **Cream-to-dark transition** between splash and gameplay: needs a brief crossfade (~250ms) on phase change so the swap isn't jarring. Wire into the existing `{#if phase === 'splash'}` block in `App.svelte`.
-- **unDraw color rewriting**: the simplest reliable approach is the one-time post-download regex replace to `currentColor`, committing the modified SVG. A runtime / build-time rewriter is a more flexible alternative but unnecessary for two files.
+- **unDraw color rewriting** (player illustration only): the simplest reliable approach is the one-time post-download regex replace of the single accent hex to `currentColor`, committing the modified SVG. The Phosphor framing-hand icons already inherit `currentColor` and need no rewriting.
 - **anime.js v4 import paths** differ from v3. Implementation must use v4-specific syntax. Pin the version in the plan to avoid drift.
 - **Splash runs during camera permission + MediaPipe init**. The entry animation must remain lightweight (transforms + opacity only) so it doesn't compete for CPU with model load.
 
 ## Open questions to resolve during implementation
 
-- Specific unDraw illustrations for `player.svg` and the hand SVGs — choose during implementation by browsing the unDraw catalog.
+- Specific unDraw illustration for `player.svg` — choose during implementation by browsing the unDraw catalog against the criteria in the Assets section.
+- Specific Phosphor icons for the two framing hands — choose during implementation from the candidate set (`hand-pointing`, `hand-pinching`, `hand-palm`).
+- Whether to install `phosphor-svelte` as a dep or import raw SVGs from `@phosphor-icons/core` — implementer's call based on the rest of the project's icon-handling conventions.
 - Final value of each color token after contrast verification.
