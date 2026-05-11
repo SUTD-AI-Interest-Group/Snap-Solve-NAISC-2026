@@ -14,6 +14,7 @@
   import { drawHandLandmarks } from '$lib/render/drawLandmarks';
   import { drawSnipRect, drawLockedSnip } from '$lib/render/drawSnipRect';
   import { drawBoard } from '$lib/render/drawPuzzle';
+  import { CANVAS_COLORS } from '$lib/render/theme';
   import { drawCursor, drawPointer } from '$lib/render/drawCursor';
   import type { Frame, Hand, PlayerHands, PlayerId } from '$lib/vision/types';
   import type { HandGesture, GestureSnapshot } from '$lib/game/state';
@@ -295,7 +296,7 @@
     if (showVideo) {
       drawVideoMirrored(ctx, cam.video);
       // Dark scrim for legibility
-      ctx.fillStyle = 'rgba(20,20,30,0.4)';
+      ctx.fillStyle = CANVAS_COLORS.scrim;
       ctx.fillRect(0, 0, cv.width, cv.height);
     } else {
       ctx.clearRect(0, 0, cv.width, cv.height);
@@ -305,8 +306,8 @@
       game.state.phase === 'trackingCheck' ||
       game.state.phase === 'snip';
     if (showLandmarks && lastFrame) {
-      const p1Color = '#ff8a5b';
-      const p2Color = '#5bb8ff';
+      const p1Color = CANVAS_COLORS.p1;
+      const p2Color = CANVAS_COLORS.p2;
       if (lastFrame.players.p1.left) drawHandLandmarks(ctx, lastFrame.players.p1.left, p1Color);
       if (lastFrame.players.p1.right) drawHandLandmarks(ctx, lastFrame.players.p1.right, p1Color);
       if (lastFrame.players.p2.left) drawHandLandmarks(ctx, lastFrame.players.p2.left, p2Color);
@@ -316,7 +317,7 @@
     if (game.state.phase === 'snip') {
       for (const side of ['p1', 'p2'] as const) {
         const ss = game.state[side];
-        const color = side === 'p1' ? '#ff8a5b' : '#5bb8ff';
+        const color = side === 'p1' ? CANVAS_COLORS.p1 : CANVAS_COLORS.p2;
         if (ss.kind === 'framing' && ss.corner2) {
           const r = {
             x: Math.min(ss.corner1.x, ss.corner2.x),
@@ -333,8 +334,8 @@
 
     // Hand overlay differs per phase.
     if (lastGestures) {
-      const p1Color = '#ff8a5b'; // red-ish (P1)
-      const p2Color = '#5bb8ff'; // blue (P2)
+      const p1Color = CANVAS_COLORS.p1;
+      const p2Color = CANVAS_COLORS.p2;
       if (game.state.phase === 'snip') {
         const p1Name = game.state.p1Name;
         const p2Name = game.state.p2Name;
@@ -379,8 +380,8 @@
       const p1Area = toPx(p1Norm);
       const p2Area = toPx(p2Norm);
       if (game.state.phase === 'solve') {
-        drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, '#ffb866');
-        drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, '#66b8ff');
+        drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, CANVAS_COLORS.p1Board);
+        drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, CANVAS_COLORS.p2Board);
       }
       if (game.state.phase === 'countdown') {
         ctx.save();
@@ -392,8 +393,8 @@
         ctx.restore();
       }
       if (game.state.phase === 'result') {
-        drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, '#ffb866');
-        drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, '#66b8ff');
+        drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, CANVAS_COLORS.p1Board);
+        drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, CANVAS_COLORS.p2Board);
       }
     }
   }
