@@ -333,7 +333,41 @@
       }
     }
 
-    // Hand overlay differs per phase.
+    if (game.state.phase === 'solve' || game.state.phase === 'countdown' || game.state.phase === 'result') {
+      // Use the same normalized boxes as the gesture logic so the cursor and
+      // the visual grid agree.
+      const p1Norm = getBoardArea('p1');
+      const p2Norm = getBoardArea('p2');
+      const toPx = (n: { x: number; y: number; w: number; h: number }) => ({
+        x: n.x * cv.width,
+        y: n.y * cv.height,
+        w: n.w * cv.width,
+        h: n.h * cv.height
+      });
+      const p1Area = toPx(p1Norm);
+      const p2Area = toPx(p2Norm);
+      if (game.state.phase === 'solve') {
+        drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, CANVAS_COLORS.p1Board);
+        drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, CANVAS_COLORS.p2Board);
+      }
+      if (game.state.phase === 'countdown') {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(p1Area.x - 8, p1Area.y - 8, p1Area.w + 16, p1Area.h + 16);
+        ctx.fillRect(p2Area.x - 8, p2Area.y - 8, p2Area.w + 16, p2Area.h + 16);
+        if (game.state.p1.snip) ctx.drawImage(game.state.p1.snip, p1Area.x, p1Area.y, p1Area.w, p1Area.h);
+        if (game.state.p2.snip) ctx.drawImage(game.state.p2.snip, p2Area.x, p2Area.y, p2Area.w, p2Area.h);
+        ctx.restore();
+      }
+      if (game.state.phase === 'result') {
+        drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, CANVAS_COLORS.p1Board);
+        drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, CANVAS_COLORS.p2Board);
+      }
+    }
+
+    // Cursors are drawn LAST so they stay on top of every other layer
+    // (snip rects, puzzle boards, countdown overlay). The player needs an
+    // unambiguous read on where their hand is while they're aiming.
     if (lastGestures) {
       const p1Color = CANVAS_COLORS.p1;
       const p2Color = CANVAS_COLORS.p2;
@@ -364,38 +398,6 @@
           const selected = h.pinch === 'pinching' || h.pinch === 'holding';
           drawPointer(ctx, h.cursor, selected, color);
         }
-      }
-    }
-
-    if (game.state.phase === 'solve' || game.state.phase === 'countdown' || game.state.phase === 'result') {
-      // Use the same normalized boxes as the gesture logic so the cursor and
-      // the visual grid agree.
-      const p1Norm = getBoardArea('p1');
-      const p2Norm = getBoardArea('p2');
-      const toPx = (n: { x: number; y: number; w: number; h: number }) => ({
-        x: n.x * cv.width,
-        y: n.y * cv.height,
-        w: n.w * cv.width,
-        h: n.h * cv.height
-      });
-      const p1Area = toPx(p1Norm);
-      const p2Area = toPx(p2Norm);
-      if (game.state.phase === 'solve') {
-        drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, CANVAS_COLORS.p1Board);
-        drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, CANVAS_COLORS.p2Board);
-      }
-      if (game.state.phase === 'countdown') {
-        ctx.save();
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(p1Area.x - 8, p1Area.y - 8, p1Area.w + 16, p1Area.h + 16);
-        ctx.fillRect(p2Area.x - 8, p2Area.y - 8, p2Area.w + 16, p2Area.h + 16);
-        if (game.state.p1.snip) ctx.drawImage(game.state.p1.snip, p1Area.x, p1Area.y, p1Area.w, p1Area.h);
-        if (game.state.p2.snip) ctx.drawImage(game.state.p2.snip, p2Area.x, p2Area.y, p2Area.w, p2Area.h);
-        ctx.restore();
-      }
-      if (game.state.phase === 'result') {
-        drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, CANVAS_COLORS.p1Board);
-        drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, CANVAS_COLORS.p2Board);
       }
     }
   }
