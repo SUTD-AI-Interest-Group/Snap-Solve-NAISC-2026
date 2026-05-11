@@ -16,9 +16,11 @@
   let { variant = 'default', size = 'default', class: className = '', children, ...rest }: Props = $props();
 
   const variants: Record<Variant, string> = {
-    default: 'bg-white text-black hover:bg-white/90',
-    outline: 'border-2 border-white/30 hover:bg-white/10',
-    ghost: 'hover:bg-white/10'
+    default:
+      'bg-[var(--color-primary)] text-[var(--color-bg)] hover:brightness-110 active:brightness-95',
+    outline:
+      'border-2 border-[var(--color-ink)]/30 text-[var(--color-ink)] hover:bg-[var(--color-ink)]/10',
+    ghost: 'text-[var(--color-ink)] hover:bg-[var(--color-ink)]/10'
   };
 
   const sizes: Record<Size, string> = {
@@ -30,7 +32,7 @@
 
 <button
   class={cn(
-    'inline-flex items-center justify-center rounded-2xl font-display tracking-wide transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-[0_4px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] hover:shadow-[0_3px_0_rgba(0,0,0,0.3)] active:translate-y-[3px] active:shadow-[0_1px_0_rgba(0,0,0,0.3)]',
+    'inline-flex items-center justify-center rounded-2xl font-display tracking-wide transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-[0_4px_0_rgba(34,27,22,0.25)] hover:translate-y-[1px] hover:shadow-[0_3px_0_rgba(34,27,22,0.25)] active:translate-y-[3px] active:shadow-[0_1px_0_rgba(34,27,22,0.25)]',
     variants[variant],
     sizes[size],
     className
