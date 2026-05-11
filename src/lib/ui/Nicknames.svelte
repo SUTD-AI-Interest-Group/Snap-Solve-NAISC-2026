@@ -21,15 +21,15 @@
 </script>
 
 <section class="h-screen flex flex-col items-center justify-center gap-12 relative z-10">
-  <h2 class="text-5xl font-black text-center">Who's playing?</h2>
+  <h2 class="font-display text-6xl md:text-7xl text-center tracking-tight">Who's playing?</h2>
   <div class="grid grid-cols-2 gap-12 w-full max-w-3xl px-6">
     <div class="flex flex-col gap-3">
-      <label for="p1" class="text-2xl font-black" style="color: var(--color-p1)">Player 1</label>
-      <Input id="p1" bind:value={p1} maxlength={12} placeholder="Nickname" class="text-xl py-6 h-14" onkeydown={onKeydown} />
+      <label for="p1" class="font-display text-3xl md:text-4xl tracking-wide" style="color: var(--color-p1)">Player 1</label>
+      <Input id="p1" bind:value={p1} maxlength={12} placeholder="Nickname" class="font-sans text-2xl py-6 h-16" onkeydown={onKeydown} />
     </div>
     <div class="flex flex-col gap-3">
-      <label for="p2" class="text-2xl font-black" style="color: var(--color-p2)">Player 2</label>
-      <Input id="p2" bind:value={p2} maxlength={12} placeholder="Nickname" class="text-xl py-6 h-14" onkeydown={onKeydown} />
+      <label for="p2" class="font-display text-3xl md:text-4xl tracking-wide" style="color: var(--color-p2)">Player 2</label>
+      <Input id="p2" bind:value={p2} maxlength={12} placeholder="Nickname" class="font-sans text-2xl py-6 h-16" onkeydown={onKeydown} />
     </div>
   </div>
   <Button size="lg" disabled={!canSubmit} onclick={submit}>Let's go!</Button>

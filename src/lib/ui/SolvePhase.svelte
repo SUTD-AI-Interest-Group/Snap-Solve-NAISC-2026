@@ -11,13 +11,18 @@
 </script>
 
 <div class="absolute inset-0 pointer-events-none z-20">
-  <div class="absolute top-2 left-1/2 -translate-x-1/2 text-5xl font-mono font-black bg-black/70 px-8 py-2 rounded-2xl">
+  <div
+    class="absolute top-2 left-1/2 -translate-x-1/2 font-mono text-3xl md:text-4xl bg-black/75 px-8 py-3 rounded-2xl tracking-wider drop-shadow-[0_4px_0_rgba(0,0,0,0.45)]"
+    style="color: var(--color-accent);"
+  >
     {timer}
   </div>
-  <div class="absolute top-4 left-6 text-2xl font-black" style="color: var(--color-p1)">
-    {p1?.name} <span class="opacity-80 font-mono">{p1?.board.correctCount}/8</span>
+  <div class="absolute top-4 left-6 flex items-baseline gap-3">
+    <span class="font-display text-3xl md:text-4xl tracking-tight" style="color: var(--color-p1)">{p1?.name}</span>
+    <span class="font-mono text-base md:text-lg opacity-85" style="color: var(--color-p1)">{p1?.board.correctCount}/8</span>
   </div>
-  <div class="absolute top-4 right-6 text-2xl font-black text-right" style="color: var(--color-p2)">
-    <span class="opacity-80 font-mono">{p2?.board.correctCount}/8</span> {p2?.name}
+  <div class="absolute top-4 right-6 flex items-baseline gap-3">
+    <span class="font-mono text-base md:text-lg opacity-85" style="color: var(--color-p2)">{p2?.board.correctCount}/8</span>
+    <span class="font-display text-3xl md:text-4xl tracking-tight" style="color: var(--color-p2)">{p2?.name}</span>
   </div>
 </div>

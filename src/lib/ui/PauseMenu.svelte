@@ -49,8 +49,8 @@
 </script>
 
 <section class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center gap-8 z-50 pointer-events-auto">
-  <h2 class="text-6xl md:text-7xl font-black">Paused</h2>
-  <p class="text-lg opacity-70">Press ESC to resume</p>
+  <h2 class="font-display text-7xl md:text-8xl tracking-tight drop-shadow-[0_6px_0_rgba(0,0,0,0.4)]" style="color: var(--color-accent);">Paused</h2>
+  <p class="font-sans text-lg md:text-xl opacity-75 font-medium">Press ESC to resume</p>
   <div class="flex flex-col md:flex-row gap-4 mt-4">
     <Button size="lg" onclick={resume}>Resume</Button>
     <Button size="lg" variant="outline" onclick={restart}>Restart match</Button>

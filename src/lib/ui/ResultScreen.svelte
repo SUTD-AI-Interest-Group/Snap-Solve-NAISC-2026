@@ -50,8 +50,12 @@
       ></span>
     {/each}
   </div>
-  <h2 bind:this={titleEl} class="text-7xl md:text-8xl font-black text-center px-6">{winnerLabel}</h2>
-  <p class="text-2xl md:text-3xl opacity-80">
+  <h2
+    bind:this={titleEl}
+    class="font-display text-7xl md:text-8xl text-center px-6 tracking-tight drop-shadow-[0_8px_0_rgba(0,0,0,0.4)]"
+    style="color: var(--color-accent);"
+  >{winnerLabel}</h2>
+  <p class="font-sans text-2xl md:text-3xl font-medium opacity-85">
     {r?.winner === 'draw' ? "Time's up!" : `Solved in ${((r?.durationMs ?? 0) / 1000).toFixed(1)}s`}
   </p>
   <div class="flex gap-6 mt-6">

@@ -22,15 +22,15 @@
   };
 
   const sizes: Record<Size, string> = {
-    default: 'h-10 px-4 py-2 text-base',
+    default: 'h-10 px-5 py-2 text-base',
     sm: 'h-8 px-3 text-sm',
-    lg: 'h-14 px-8 text-xl'
+    lg: 'h-16 px-10 text-2xl'
   };
 </script>
 
 <button
   class={cn(
-    'inline-flex items-center justify-center rounded-xl font-bold transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none',
+    'inline-flex items-center justify-center rounded-2xl font-display tracking-wide transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-[0_4px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] hover:shadow-[0_3px_0_rgba(0,0,0,0.3)] active:translate-y-[3px] active:shadow-[0_1px_0_rgba(0,0,0,0.3)]',
     variants[variant],
     sizes[size],
     className

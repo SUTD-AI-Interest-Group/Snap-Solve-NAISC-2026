@@ -13,8 +13,8 @@
 <div class="absolute inset-0 pointer-events-none z-20">
   <div class="absolute inset-y-0 left-1/2 w-px bg-white/30"></div>
   <div class="absolute top-8 left-0 w-1/2 px-8">
-    <h3 class="text-3xl md:text-4xl font-black mb-3 text-center" style="color: var(--color-p1)">{p1Name}</h3>
-    <p class="text-center text-lg opacity-80 mb-4">Hold both hands in view</p>
+    <h3 class="font-display text-4xl md:text-5xl mb-3 text-center tracking-tight" style="color: var(--color-p1)">{p1Name}</h3>
+    <p class="font-sans text-center text-lg md:text-xl font-medium opacity-85 mb-4">Hold both hands in view</p>
     <div class="w-full h-4 bg-white/10 rounded-full overflow-hidden">
       <div
         class="h-full transition-[width] duration-100"
@@ -23,8 +23,8 @@
     </div>
   </div>
   <div class="absolute top-8 right-0 w-1/2 px-8">
-    <h3 class="text-3xl md:text-4xl font-black mb-3 text-center" style="color: var(--color-p2)">{p2Name}</h3>
-    <p class="text-center text-lg opacity-80 mb-4">Hold both hands in view</p>
+    <h3 class="font-display text-4xl md:text-5xl mb-3 text-center tracking-tight" style="color: var(--color-p2)">{p2Name}</h3>
+    <p class="font-sans text-center text-lg md:text-xl font-medium opacity-85 mb-4">Hold both hands in view</p>
     <div class="w-full h-4 bg-white/10 rounded-full overflow-hidden">
       <div
         class="h-full transition-[width] duration-100"
@@ -34,7 +34,7 @@
   </div>
   {#if auto !== null}
     <div class="absolute inset-0 flex items-center justify-center">
-      <div class="text-9xl font-black bg-black/70 rounded-3xl px-16 py-8">{Math.ceil(auto / 1000)}</div>
+      <div class="font-display text-[10rem] leading-none bg-black/70 rounded-3xl px-16 py-8 drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]">{Math.ceil(auto / 1000)}</div>
     </div>
   {/if}
 </div>

@@ -22,7 +22,7 @@
 </script>
 
 <section class="h-screen flex flex-col items-center justify-center text-center select-none relative z-10">
-  <h1 class="text-7xl md:text-8xl font-black tracking-tight">
+  <h1 class="font-display text-8xl md:text-9xl tracking-tight leading-none drop-shadow-[0_8px_0_rgba(0,0,0,0.35)]">
     {#each letters as ch, i}
       {#if ch === ' '}
         <span class="inline-block w-4 md:w-6"></span>
@@ -34,7 +34,7 @@
       {/if}
     {/each}
   </h1>
-  <p class="mt-8 text-xl md:text-2xl opacity-80 max-w-2xl px-6">
+  <p class="font-sans mt-10 text-2xl md:text-3xl font-medium opacity-90 max-w-2xl px-6">
     Snip a picture with your fingers. Solve the puzzle. Beat your friend.
   </p>
   <div class="mt-12">
