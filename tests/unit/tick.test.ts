@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { tick } from '../../src/lib/game/tick';
 import { initialState, EMPTY_GESTURES, type GameState, type GestureSnapshot, type HandGesture } from '../../src/lib/game/state';
-import { makeSolvedBoard, slide as bSlide } from '../../src/lib/game/board';
+import { makeSolvedBoard, swap as bSwap } from '../../src/lib/game/board';
 
 function bothHands(p1xL: number, p1xR: number, p2xL: number, p2xR: number, pinch: 'idle' | 'pinching' | 'holding' = 'idle'): GestureSnapshot {
   return {
@@ -121,7 +121,7 @@ describe('tick - solve', () => {
       remainingMs: 60_000,
       startMs: 300_000,
       p1: { ...stub, board: makeSolvedBoard() },
-      p2: { ...stub, board: bSlide(makeSolvedBoard(), 7) }
+      p2: { ...stub, board: bSwap(makeSolvedBoard(), 0, 1) }
     };
     const s = tick(s0, { type: 'tick', dtMs: 16 }, EMPTY_GESTURES);
     expect(s.phase).toBe('result');
@@ -130,8 +130,8 @@ describe('tick - solve', () => {
 
   it('on timeout, higher correctCount wins', () => {
     const stub = { name: 'X', snip: undefined as unknown as ImageBitmap, pieces: [] };
-    const p1Board = bSlide(makeSolvedBoard(), 7);
-    const p2Board = bSlide(bSlide(makeSolvedBoard(), 7), 4);
+    const p1Board = bSwap(makeSolvedBoard(), 0, 1); // 7 correct
+    const p2Board = bSwap(bSwap(makeSolvedBoard(), 0, 1), 2, 3); // 5 correct
     const s0: GameState = {
       phase: 'solve',
       remainingMs: 16,
@@ -160,7 +160,7 @@ describe('tick - solve drag/drop', () => {
     return { x: (c + 0.5) / 3, y: (r + 0.5) / 3 };
   }
 
-  it('pinching over slidable piece lifts it', () => {
+  it('pinching over any piece lifts it (no adjacency required)', () => {
     const stub = { name: 'X', snip: undefined as unknown as ImageBitmap, pieces: [] };
     const s0: GameState = {
       phase: 'solve',
@@ -171,7 +171,7 @@ describe('tick - solve drag/drop', () => {
     };
     const g: GestureSnapshot = {
       p1: {
-        left: { present: true, pinch: 'holding', cursor: imageCursorOverCell(7, 'p1') },
+        left: { present: true, pinch: 'holding', cursor: imageCursorOverCell(0, 'p1') },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
       p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
@@ -179,16 +179,15 @@ describe('tick - solve drag/drop', () => {
     const s = tick(s0, { type: 'tick', dtMs: 16 }, g);
     if (s.phase === 'solve') {
       expect(s.p1.board.heldBy).toBe('p1');
-      expect(s.p1.board.heldPieceCell).toBe(7);
+      expect(s.p1.board.heldPieceCell).toBe(0);
     }
   });
 
-  it('releasing pinch over empty cell with adjacent held piece performs the slide', () => {
+  it('releasing pinch over a different cell swaps the two pieces', () => {
     const stub = { name: 'X', snip: undefined as unknown as ImageBitmap, pieces: [] };
     const board = makeSolvedBoard();
     board.heldBy = 'p1';
-    board.heldPieceCell = 7;
-    // heldCursor is now stored in board-local 0..1 coords.
+    board.heldPieceCell = 0;
     board.heldCursor = boardLocalAtCell(8);
 
     const s0: GameState = {
@@ -196,7 +195,7 @@ describe('tick - solve drag/drop', () => {
       remainingMs: 60000,
       startMs: 300_000,
       p1: { ...stub, board },
-      p2: { ...stub, board: makeSolvedBoard() }
+      p2: { ...stub, board: bSwap(makeSolvedBoard(), 0, 1) }
     };
     const g: GestureSnapshot = {
       p1: {
@@ -207,8 +206,40 @@ describe('tick - solve drag/drop', () => {
     };
     const s = tick(s0, { type: 'tick', dtMs: 16 }, g);
     if (s.phase === 'solve') {
-      expect(s.p1.board.cells[8]).toBe(7);
-      expect(s.p1.board.cells[7]).toBeNull();
+      expect(s.p1.board.cells[0]).toBe(8);
+      expect(s.p1.board.cells[8]).toBe(0);
+      expect(s.p1.board.heldBy).toBeNull();
+      expect(s.p1.board.heldPieceCell).toBe(-1);
+      expect(s.p1.board.heldCursor).toBeNull();
+    } else {
+      throw new Error('expected solve phase');
+    }
+  });
+
+  it('releasing pinch back over the origin cell cancels (no swap)', () => {
+    const stub = { name: 'X', snip: undefined as unknown as ImageBitmap, pieces: [] };
+    const board = makeSolvedBoard();
+    board.heldBy = 'p1';
+    board.heldPieceCell = 4;
+    board.heldCursor = boardLocalAtCell(4);
+
+    const s0: GameState = {
+      phase: 'solve',
+      remainingMs: 60000,
+      startMs: 300_000,
+      p1: { ...stub, board },
+      p2: { ...stub, board: bSwap(makeSolvedBoard(), 0, 1) }
+    };
+    const g: GestureSnapshot = {
+      p1: {
+        left: { present: true, pinch: 'idle', cursor: imageCursorOverCell(4, 'p1') },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      },
+      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+    };
+    const s = tick(s0, { type: 'tick', dtMs: 16 }, g);
+    if (s.phase === 'solve') {
+      expect(s.p1.board.cells).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
       expect(s.p1.board.heldBy).toBeNull();
     }
   });

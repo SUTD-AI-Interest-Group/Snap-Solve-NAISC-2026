@@ -1,89 +1,73 @@
 import type { PieceId, PlayerId, Point } from '../vision/types';
 
+const SIZE = 3;
+const CELLS = SIZE * SIZE;
+
 export type Board = {
-  cells: (PieceId | null)[];
-  emptyIndex: number;
+  cells: PieceId[];
   correctCount: number;
   heldBy: PlayerId | null;
   heldPieceCell: number;
   heldCursor: Point | null;
 };
 
-const SIZE = 3;
-const CELLS = SIZE * SIZE;
+const CLEARED_HELD = {
+  heldBy: null as PlayerId | null,
+  heldPieceCell: -1,
+  heldCursor: null as Point | null
+};
 
 export function makeSolvedBoard(): Board {
-  const cells: (PieceId | null)[] = [0, 1, 2, 3, 4, 5, 6, 7, null];
-  return {
-    cells,
-    emptyIndex: 8,
-    correctCount: 8,
-    heldBy: null,
-    heldPieceCell: -1,
-    heldCursor: null
-  };
-}
-
-export function isSolved(b: Board): boolean {
-  for (let i = 0; i < CELLS - 1; i++) if (b.cells[i] !== (i as PieceId)) return false;
-  return b.cells[CELLS - 1] === null;
-}
-
-function rowCol(idx: number): [number, number] {
-  return [Math.floor(idx / SIZE), idx % SIZE];
-}
-
-export function isAdjacentToEmpty(b: Board, idx: number): boolean {
-  if (idx === b.emptyIndex || idx < 0 || idx >= CELLS) return false;
-  const [r1, c1] = rowCol(idx);
-  const [r2, c2] = rowCol(b.emptyIndex);
-  return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
-}
-
-export function slide(b: Board, fromIdx: number): Board {
-  if (!isAdjacentToEmpty(b, fromIdx)) return b;
-  const cells = b.cells.slice();
-  cells[b.emptyIndex] = cells[fromIdx];
-  cells[fromIdx] = null;
-  const next: Board = {
-    cells,
-    emptyIndex: fromIdx,
-    correctCount: 0,
-    heldBy: null,
-    heldPieceCell: -1,
-    heldCursor: null
-  };
-  next.correctCount = correctCount(next);
-  return next;
+  const cells: PieceId[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  return { cells, correctCount: CELLS, ...CLEARED_HELD };
 }
 
 export function correctCount(b: Board): number {
   let n = 0;
-  for (let i = 0; i < CELLS; i++) {
-    const c = b.cells[i];
-    if (c !== null && c === (i as PieceId)) n++;
-  }
+  for (let i = 0; i < CELLS; i++) if (b.cells[i] === (i as PieceId)) n++;
   return n;
 }
 
-function neighborsOfEmpty(b: Board): number[] {
-  const [r, c] = rowCol(b.emptyIndex);
-  const out: number[] = [];
-  if (r > 0) out.push(b.emptyIndex - SIZE);
-  if (r < SIZE - 1) out.push(b.emptyIndex + SIZE);
-  if (c > 0) out.push(b.emptyIndex - 1);
-  if (c < SIZE - 1) out.push(b.emptyIndex + 1);
-  return out;
+export function isSolved(b: Board): boolean {
+  for (let i = 0; i < CELLS; i++) if (b.cells[i] !== (i as PieceId)) return false;
+  return true;
 }
 
-export function scrambleByRandomMoves(n: number, rng: () => number = Math.random): Board {
-  let b = makeSolvedBoard();
-  let lastFrom = -1;
-  for (let i = 0; i < n; i++) {
-    const options = neighborsOfEmpty(b).filter((idx) => idx !== lastFrom);
-    const pick = options[Math.floor(rng() * options.length)];
-    lastFrom = b.emptyIndex;
-    b = slide(b, pick);
+export function swap(b: Board, a: number, c: number): Board {
+  const cells = b.cells.slice() as PieceId[];
+  if (a !== c) {
+    const tmp = cells[a];
+    cells[a] = cells[c];
+    cells[c] = tmp;
   }
-  return b;
+  const next: Board = { cells, correctCount: 0, ...CLEARED_HELD };
+  next.correctCount = correctCount(next);
+  return next;
+}
+
+export function scrambleSwap(
+  rng: () => number = Math.random,
+  minOutOfPlace = 7
+): Board {
+  const cap = Math.min(minOutOfPlace, CELLS);
+  for (let attempts = 0; attempts < 1000; attempts++) {
+    const cells: PieceId[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    for (let i = CELLS - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const tmp = cells[i];
+      cells[i] = cells[j];
+      cells[j] = tmp;
+    }
+    let displaced = 0;
+    for (let i = 0; i < CELLS; i++) if (cells[i] !== (i as PieceId)) displaced++;
+    if (displaced >= cap) {
+      const b: Board = { cells, correctCount: CELLS - displaced, ...CLEARED_HELD };
+      return b;
+    }
+  }
+  const cells: PieceId[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  const tmp = cells[0];
+  cells[0] = cells[1];
+  cells[1] = tmp;
+  return { cells, correctCount: CELLS - 2, ...CLEARED_HELD };
 }

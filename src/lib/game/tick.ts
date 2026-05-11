@@ -8,12 +8,7 @@ import type {
 } from './state';
 import type { PlayerId, Point } from '../vision/types';
 import type { Board } from './board';
-import {
-  isAdjacentToEmpty,
-  slide as boardSlide,
-  scrambleByRandomMoves,
-  makeSolvedBoard
-} from './board';
+import { scrambleSwap, swap as boardSwap } from './board';
 import { rectFromCorners, clampToPlayerHalf, hasMinSize } from './snip';
 
 const READY_HOLD_TARGET_MS = 2000;
@@ -91,19 +86,17 @@ function applyPlayerHold(
     if (board.heldBy === player) {
       return { ...board, heldCursor: local };
     }
-    if (cell >= 0 && isAdjacentToEmpty(board, cell)) {
+    if (cell >= 0) {
       return { ...board, heldBy: player, heldPieceCell: cell, heldCursor: local };
     }
     return board;
   }
 
   if (board.heldBy === player) {
+    const origin = board.heldPieceCell;
     const dropCell = boardCellAt(board.heldCursor ?? { x: -1, y: -1 });
-    const src = board.heldPieceCell;
-    const valid = dropCell === board.emptyIndex && isAdjacentToEmpty(board, src);
-    if (valid) {
-      return boardSlide(board, src);
-    }
+    const valid = dropCell >= 0 && dropCell !== origin;
+    if (valid) return boardSwap(board, origin, dropCell);
     return { ...board, heldBy: null, heldPieceCell: -1, heldCursor: null };
   }
   return board;
@@ -185,8 +178,8 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
       if (event.type !== 'tick') return state;
       const remaining = state.remainingMs - event.dtMs;
       if (remaining > 0) return { ...state, remainingMs: remaining };
-      const p1Board = scrambleByRandomMoves(80);
-      const p2Board = scrambleByRandomMoves(80);
+      const p1Board = scrambleSwap();
+      const p2Board = scrambleSwap();
       return {
         phase: 'solve',
         remainingMs: SOLVE_DURATION_MS,
@@ -204,8 +197,8 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
       const p1 = { ...state.p1, board: p1Board };
       const p2 = { ...state.p2, board: p2Board };
 
-      const p1Won = p1Board.correctCount === 8 && p1Board.cells[8] === null;
-      const p2Won = p2Board.correctCount === 8 && p2Board.cells[8] === null;
+      const p1Won = p1Board.correctCount === 9;
+      const p2Won = p2Board.correctCount === 9;
       if (p1Won)
         return {
           phase: 'result',
