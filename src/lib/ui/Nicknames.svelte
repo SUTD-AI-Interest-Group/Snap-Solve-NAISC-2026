@@ -20,8 +20,17 @@
   }
 </script>
 
-<section class="h-screen flex flex-col items-center justify-center gap-12 relative z-10">
-  <h2 class="font-display text-6xl md:text-7xl text-center tracking-tight">Who's playing?</h2>
+<section class="splash-bg h-screen flex flex-col items-center justify-center gap-12 relative z-10 overflow-hidden">
+  <!-- Decorative illustration — bottom-right corner accent -->
+  <img
+    src="/illustrations/capture-moment.svg"
+    alt=""
+    aria-hidden="true"
+    class="absolute bottom-0 right-4 h-48 md:h-56 w-auto opacity-25 pointer-events-none select-none"
+    draggable="false"
+  />
+
+  <h2 class="font-display text-6xl md:text-7xl text-center tracking-tight" style="color: var(--color-ink);">Who's playing?</h2>
   <div class="grid grid-cols-2 gap-12 w-full max-w-3xl px-6">
     <div class="flex flex-col gap-3">
       <label for="p1" class="font-display text-3xl md:text-4xl tracking-wide" style="color: var(--color-p1)">Player 1</label>
