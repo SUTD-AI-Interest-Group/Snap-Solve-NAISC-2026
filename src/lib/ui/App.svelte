@@ -445,22 +445,27 @@
 <MuteButton />
 
 {#if permError || trackingError}
-  <div class="absolute inset-0 flex items-center justify-center z-50 bg-black/85 backdrop-blur-sm">
-    <div class="bg-black/90 border-2 border-white/20 p-10 rounded-2xl max-w-lg text-center">
-      <h3 class="font-display text-4xl mb-4 tracking-tight" style="color: var(--color-accent);">
+  <div class="absolute inset-0 flex items-center justify-center z-50 backdrop-blur-sm" style="background: rgba(34, 27, 22, 0.85);">
+    <div
+      class="border-2 p-10 rounded-2xl max-w-lg text-center"
+      style="background: var(--color-bg); border-color: var(--color-primary); color: var(--color-ink);"
+    >
+      <h3 class="font-display text-4xl mb-4 tracking-tight" style="color: var(--color-primary);">
         {permError ? 'Camera access needed' : 'Setup error'}
       </h3>
       <p class="font-sans text-base md:text-lg opacity-85 leading-relaxed">{permError ?? trackingError}</p>
       <div class="mt-6 flex gap-3 justify-center">
         <button
-          class="font-display tracking-wide px-6 py-3 bg-white text-black rounded-xl text-lg disabled:opacity-50"
+          class="font-display tracking-wide px-6 py-3 rounded-xl text-lg disabled:opacity-50"
+          style="background: var(--color-primary); color: var(--color-bg);"
           disabled={initializing}
           onclick={retry}
         >
           {initializing ? 'Trying…' : 'Retry'}
         </button>
         <button
-          class="font-display tracking-wide px-6 py-3 border-2 border-white/30 rounded-xl text-lg"
+          class="font-display tracking-wide px-6 py-3 border-2 rounded-xl text-lg"
+          style="border-color: var(--color-ink); color: var(--color-ink); opacity: 0.7;"
           onclick={() => location.reload()}
         >
           Reload page
