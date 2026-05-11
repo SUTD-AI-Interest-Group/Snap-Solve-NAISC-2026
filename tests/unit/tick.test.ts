@@ -166,8 +166,8 @@ describe('tick - solve drag/drop', () => {
       phase: 'solve',
       remainingMs: 60000,
       startMs: 300_000,
-      p1: { ...stub, board: makeSolvedBoard() },
-      p2: { ...stub, board: makeSolvedBoard() }
+      p1: { ...stub, board: bSwap(makeSolvedBoard(), 0, 1) },
+      p2: { ...stub, board: bSwap(makeSolvedBoard(), 0, 1) }
     };
     const g: GestureSnapshot = {
       p1: {
@@ -180,6 +180,8 @@ describe('tick - solve drag/drop', () => {
     if (s.phase === 'solve') {
       expect(s.p1.board.heldBy).toBe('p1');
       expect(s.p1.board.heldPieceCell).toBe(0);
+    } else {
+      throw new Error('expected solve phase');
     }
   });
 
@@ -218,7 +220,7 @@ describe('tick - solve drag/drop', () => {
 
   it('releasing pinch back over the origin cell cancels (no swap)', () => {
     const stub = { name: 'X', snip: undefined as unknown as ImageBitmap, pieces: [] };
-    const board = makeSolvedBoard();
+    const board = bSwap(makeSolvedBoard(), 0, 1);
     board.heldBy = 'p1';
     board.heldPieceCell = 4;
     board.heldCursor = boardLocalAtCell(4);
@@ -239,8 +241,10 @@ describe('tick - solve drag/drop', () => {
     };
     const s = tick(s0, { type: 'tick', dtMs: 16 }, g);
     if (s.phase === 'solve') {
-      expect(s.p1.board.cells).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+      expect(s.p1.board.cells).toEqual([1, 0, 2, 3, 4, 5, 6, 7, 8]);
       expect(s.p1.board.heldBy).toBeNull();
+    } else {
+      throw new Error('expected solve phase');
     }
   });
 });
