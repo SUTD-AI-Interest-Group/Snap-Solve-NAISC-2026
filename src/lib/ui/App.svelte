@@ -20,6 +20,7 @@
   import type { HandGesture, GestureSnapshot } from '$lib/game/state';
   import { preloadSfx, playSfx } from '$lib/audio/sfx';
   import { playMusic } from '$lib/audio/music';
+  import { fade } from 'svelte/transition';
 
   import Splash from './Splash.svelte';
   import Nicknames from './Nicknames.svelte';
@@ -468,8 +469,12 @@
     </div>
   </div>
 {:else}
-  {#if game.state.phase === 'splash'}<Splash />{/if}
-  {#if game.state.phase === 'nicknames'}<Nicknames />{/if}
+  {#if game.state.phase === 'splash'}
+    <div out:fade={{ duration: 250 }}><Splash /></div>
+  {/if}
+  {#if game.state.phase === 'nicknames'}
+    <div in:fade={{ duration: 250 }}><Nicknames /></div>
+  {/if}
   {#if game.state.phase === 'trackingCheck'}<TrackingCheck />{/if}
   {#if game.state.phase === 'snip'}<SnipPhase />{/if}
   {#if game.state.phase === 'countdown'}<Countdown />{/if}
