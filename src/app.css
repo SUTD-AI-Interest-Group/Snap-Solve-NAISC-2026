@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+:root {
+  --color-p1: oklch(0.75 0.18 30);
+  --color-p2: oklch(0.7 0.18 235);
+  --color-accent: oklch(0.85 0.2 90);
+}
+
+html, body { height: 100%; margin: 0; overflow: hidden; font-family: system-ui, sans-serif; }
+body { background: oklch(0.18 0.02 270); color: oklch(0.96 0 0); }
