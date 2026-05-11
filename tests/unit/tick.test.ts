@@ -145,7 +145,16 @@ describe('tick - solve', () => {
 });
 
 describe('tick - solve drag/drop', () => {
-  function pinchAt(cell: number) {
+  // Player board areas (must match tick.ts): P1 = (0.06, 0.18, 0.38, 0.74), P2 = (0.56, 0.18, 0.38, 0.74).
+  function imageCursorOverCell(cell: number, player: 'p1' | 'p2') {
+    const r = Math.floor(cell / 3);
+    const c = cell % 3;
+    const localX = (c + 0.5) / 3;
+    const localY = (r + 0.5) / 3;
+    const a = player === 'p1' ? { x: 0.06, y: 0.18, w: 0.38, h: 0.74 } : { x: 0.56, y: 0.18, w: 0.38, h: 0.74 };
+    return { x: a.x + localX * a.w, y: a.y + localY * a.h };
+  }
+  function boardLocalAtCell(cell: number) {
     const r = Math.floor(cell / 3);
     const c = cell % 3;
     return { x: (c + 0.5) / 3, y: (r + 0.5) / 3 };
@@ -162,7 +171,7 @@ describe('tick - solve drag/drop', () => {
     };
     const g: GestureSnapshot = {
       p1: {
-        left: { present: true, pinch: 'holding', cursor: pinchAt(7) },
+        left: { present: true, pinch: 'holding', cursor: imageCursorOverCell(7, 'p1') },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
       p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
@@ -179,7 +188,8 @@ describe('tick - solve drag/drop', () => {
     const board = makeSolvedBoard();
     board.heldBy = 'p1';
     board.heldPieceCell = 7;
-    board.heldCursor = pinchAt(8);
+    // heldCursor is now stored in board-local 0..1 coords.
+    board.heldCursor = boardLocalAtCell(8);
 
     const s0: GameState = {
       phase: 'solve',
@@ -190,7 +200,7 @@ describe('tick - solve drag/drop', () => {
     };
     const g: GestureSnapshot = {
       p1: {
-        left: { present: true, pinch: 'idle', cursor: pinchAt(8) },
+        left: { present: true, pinch: 'idle', cursor: imageCursorOverCell(8, 'p1') },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
       p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }

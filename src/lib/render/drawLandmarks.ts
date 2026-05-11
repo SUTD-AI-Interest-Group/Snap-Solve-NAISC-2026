@@ -21,13 +21,13 @@ export function drawHandLandmarks(ctx: CanvasRenderingContext2D, hand: Hand, col
   for (const [a, b] of CONNECTIONS) {
     const la = hand.landmarks[a];
     const lb = hand.landmarks[b];
-    ctx.moveTo((1 - la.x) * w, la.y * h);
-    ctx.lineTo((1 - lb.x) * w, lb.y * h);
+    ctx.moveTo(la.x * w, la.y * h);
+    ctx.lineTo(lb.x * w, lb.y * h);
   }
   ctx.stroke();
   for (const lm of hand.landmarks) {
     ctx.beginPath();
-    ctx.arc((1 - lm.x) * w, lm.y * h, 4, 0, Math.PI * 2);
+    ctx.arc(lm.x * w, lm.y * h, 4, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();

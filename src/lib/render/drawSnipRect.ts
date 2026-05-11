@@ -7,7 +7,7 @@ export function drawSnipRect(
   color: string
 ) {
   const { width: w, height: h } = ctx.canvas;
-  const x = (1 - (rect.x + rect.w)) * w;
+  const x = rect.x * w;
   const y = rect.y * h;
   const rw = rect.w * w;
   const rh = rect.h * h;
@@ -31,7 +31,7 @@ export function drawSnipRect(
 
 export function drawLockedSnip(ctx: CanvasRenderingContext2D, rect: Rect, color: string) {
   const { width: w, height: h } = ctx.canvas;
-  const x = (1 - (rect.x + rect.w)) * w;
+  const x = rect.x * w;
   const y = rect.y * h;
   ctx.save();
   ctx.lineWidth = 5;

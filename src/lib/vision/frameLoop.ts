@@ -21,6 +21,9 @@ export function startFrameLoop({ video, onFrame }: FrameLoopOptions): () => void
     last = now;
     if (video.readyState >= 2) {
       const hands = detectHands(video, now);
+      // Mirror x at source: the video is displayed mirrored, so every downstream
+      // module thinks in "screen space" (left of screen = low x). Snip capture
+      // is the only place that converts back to the unmirrored video frame.
       const smoothed = hands.map((h, hi) => ({
         ...h,
         landmarks: h.landmarks.map((lm, li) => {
@@ -30,7 +33,7 @@ export function startFrameLoop({ video, onFrame }: FrameLoopOptions): () => void
             f = new OneEuroPointFilter();
             filters.set(key, f);
           }
-          const p = f.filter({ x: lm.x, y: lm.y }, now);
+          const p = f.filter({ x: 1 - lm.x, y: lm.y }, now);
           return { x: p.x, y: p.y, z: lm.z };
         })
       }));

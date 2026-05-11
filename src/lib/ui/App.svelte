@@ -3,8 +3,8 @@
   import { openWebcam, type WebcamHandle } from '$lib/vision/webcam';
   import { initHandLandmarker } from '$lib/vision/mediapipe';
   import { startFrameLoop } from '$lib/vision/frameLoop';
-  import { game } from '$lib/store.svelte';
-  import { tick as gameTick } from '$lib/game/tick';
+  import { game, paused } from '$lib/store.svelte';
+  import { tick as gameTick, getBoardArea } from '$lib/game/tick';
   import { normalizedPinchDistance, advancePinchState, type PinchState } from '$lib/gesture/pinch';
   import { getCursorPoint } from '$lib/gesture/cursor';
   import { captureSnip } from '$lib/game/snip';
@@ -14,6 +14,7 @@
   import { drawHandLandmarks } from '$lib/render/drawLandmarks';
   import { drawSnipRect, drawLockedSnip } from '$lib/render/drawSnipRect';
   import { drawBoard } from '$lib/render/drawPuzzle';
+  import { drawCursor } from '$lib/render/drawCursor';
   import type { Frame, Hand } from '$lib/vision/types';
   import type { HandGesture, GestureSnapshot } from '$lib/game/state';
   import { preloadSfx, playSfx } from '$lib/audio/sfx';
@@ -27,11 +28,13 @@
   import SolvePhase from './SolvePhase.svelte';
   import ResultScreen from './ResultScreen.svelte';
   import MuteButton from './MuteButton.svelte';
+  import PauseMenu from './PauseMenu.svelte';
 
   let cam: WebcamHandle | null = null;
   let permError = $state<string | null>(null);
   let canvas: HTMLCanvasElement | undefined = $state();
   let lastFrame: Frame | null = null;
+  let lastGestures: GestureSnapshot | null = null;
   let snipCaptureInProgress = false;
 
   const pinches: Record<string, PinchState> = {
@@ -84,8 +87,16 @@
     try {
       const w = cam.video.videoWidth;
       const h = cam.video.videoHeight;
-      if (!p1.snapshot) p1.snapshot = await captureSnip(cam.video, p1.rect, w, h);
-      if (!p2.snapshot) p2.snapshot = await captureSnip(cam.video, p2.rect, w, h);
+      // Game state stores rects in mirrored screen coords; the video frame
+      // is unmirrored, so flip x before reading pixels.
+      const unmirror = (r: { x: number; y: number; w: number; h: number }) => ({
+        x: 1 - r.x - r.w,
+        y: r.y,
+        w: r.w,
+        h: r.h
+      });
+      if (!p1.snapshot) p1.snapshot = await captureSnip(cam.video, unmirror(p1.rect), w, h);
+      if (!p2.snapshot) p2.snapshot = await captureSnip(cam.video, unmirror(p2.rect), w, h);
       const [p1Pieces, p2Pieces] = await Promise.all([
         sliceSnipInto9Pieces(p1.snapshot),
         sliceSnipInto9Pieces(p2.snapshot)
@@ -148,17 +159,18 @@
 
   function draw() {
     if (!canvas || !cam) return;
-    resizeCanvasToDisplay(canvas);
-    const ctx = canvas.getContext('2d');
+    const cv: HTMLCanvasElement = canvas;
+    resizeCanvasToDisplay(cv);
+    const ctx = cv.getContext('2d');
     if (!ctx) return;
     const showVideo = game.state.phase !== 'splash' && game.state.phase !== 'nicknames';
     if (showVideo) {
       drawVideoMirrored(ctx, cam.video);
       // Dark scrim for legibility
       ctx.fillStyle = 'rgba(20,20,30,0.4)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, cv.width, cv.height);
     } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, cv.width, cv.height);
     }
 
     const showLandmarks =
@@ -191,21 +203,45 @@
       }
     }
 
+    // Cursor overlay on each player's hands during snip + solve phases.
+    if ((game.state.phase === 'snip' || game.state.phase === 'solve') && lastGestures) {
+      const p1Color = '#ff8a5b';
+      const p2Color = '#5bb8ff';
+      const p1Name = game.state.phase === 'solve' ? game.state.p1.name : game.state.p1Name;
+      const p2Name = game.state.phase === 'solve' ? game.state.p2.name : game.state.p2Name;
+      for (const [side, color, name] of [
+        ['p1', p1Color, p1Name] as const,
+        ['p2', p2Color, p2Name] as const
+      ]) {
+        const hands = lastGestures[side];
+        for (const slot of ['left', 'right'] as const) {
+          const h = hands[slot];
+          if (!h.present) continue;
+          // Show the player tag once per side, on whichever hand is most engaged.
+          const showLabel = slot === 'left' && (h.pinch === 'holding' || h.pinch === 'pinching');
+          drawCursor(ctx, h.cursor, h.pinch, color, showLabel ? name : undefined);
+        }
+      }
+    }
+
     if (game.state.phase === 'solve' || game.state.phase === 'countdown' || game.state.phase === 'result') {
-      const W = canvas.width;
-      const H = canvas.height;
-      const top = Math.max(80, H * 0.12);
-      const side = Math.min(H - top - 40, W * 0.42);
-      const yArea = top + (H - top - side) / 2;
-      const margin = (W / 2 - side) / 2;
-      const p1Area = { x: margin, y: yArea, w: side, h: side };
-      const p2Area = { x: W / 2 + margin, y: yArea, w: side, h: side };
+      // Use the same normalized boxes as the gesture logic so the cursor and
+      // the visual grid agree.
+      const p1Norm = getBoardArea('p1');
+      const p2Norm = getBoardArea('p2');
+      const toPx = (n: { x: number; y: number; w: number; h: number }) => ({
+        x: n.x * cv.width,
+        y: n.y * cv.height,
+        w: n.w * cv.width,
+        h: n.h * cv.height
+      });
+      const p1Area = toPx(p1Norm);
+      const p2Area = toPx(p2Norm);
       if (game.state.phase === 'solve') {
         drawBoard(ctx, game.state.p1.board, game.state.p1.pieces, p1Area, '#ffb866');
         drawBoard(ctx, game.state.p2.board, game.state.p2.pieces, p2Area, '#66b8ff');
       }
       if (game.state.phase === 'countdown') {
-        // Pre-scrambled preview: just show snip thumbnails for tease
         ctx.save();
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.fillRect(p1Area.x - 8, p1Area.y - 8, p1Area.w + 16, p1Area.h + 16);
@@ -237,9 +273,22 @@
     }
   });
 
+  function onKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      // Pause is meaningful from the moment the live game starts.
+      const p = game.state.phase;
+      if (p === 'trackingCheck' || p === 'snip' || p === 'countdown' || p === 'solve') {
+        paused.value = !paused.value;
+      } else if (p === 'result' && paused.value) {
+        paused.value = false;
+      }
+    }
+  }
+
   onMount(() => {
     let stopLoop: (() => void) | null = null;
     let aborted = false;
+    window.addEventListener('keydown', onKeydown);
 
     (async () => {
       try {
@@ -253,9 +302,12 @@
           onFrame: (frame, dt) => {
             const gestures = framesToGestures(frame, dt);
             lastFrame = frame;
-            game.state = gameTick(game.state, { type: 'tick', dtMs: dt }, gestures);
-            reactAudio();
-            maybeCaptureLockedSnips();
+            lastGestures = gestures;
+            if (!paused.value) {
+              game.state = gameTick(game.state, { type: 'tick', dtMs: dt }, gestures);
+              reactAudio();
+              maybeCaptureLockedSnips();
+            }
             draw();
           }
         });
@@ -268,6 +320,7 @@
       aborted = true;
       stopLoop?.();
       cam?.stop();
+      window.removeEventListener('keydown', onKeydown);
     };
   });
 </script>
@@ -293,3 +346,5 @@
   {#if game.state.phase === 'solve'}<SolvePhase />{/if}
   {#if game.state.phase === 'result'}<ResultScreen />{/if}
 {/if}
+
+{#if paused.value}<PauseMenu />{/if}

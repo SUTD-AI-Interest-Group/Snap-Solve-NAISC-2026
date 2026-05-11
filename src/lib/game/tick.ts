@@ -52,9 +52,24 @@ function nextSnipState(
   return { kind: 'idle' };
 }
 
-function boardCellAt(p: Point): number {
-  const col = Math.max(0, Math.min(2, Math.floor(p.x * 3)));
-  const row = Math.max(0, Math.min(2, Math.floor(p.y * 3)));
+// Normalized image-coord boxes where each player's 3x3 board lives on screen.
+// Cursor in image coords gets remapped to local 0..1 within these boxes.
+const P1_BOARD_AREA = { x: 0.06, y: 0.18, w: 0.38, h: 0.74 };
+const P2_BOARD_AREA = { x: 0.56, y: 0.18, w: 0.38, h: 0.74 };
+
+export function getBoardArea(player: PlayerId): { x: number; y: number; w: number; h: number } {
+  return player === 'p1' ? P1_BOARD_AREA : P2_BOARD_AREA;
+}
+
+function cursorToBoardLocal(p: Point, player: PlayerId): Point {
+  const a = getBoardArea(player);
+  return { x: (p.x - a.x) / a.w, y: (p.y - a.y) / a.h };
+}
+
+function boardCellAt(local: Point): number {
+  if (local.x < 0 || local.x > 1 || local.y < 0 || local.y > 1) return -1;
+  const col = Math.max(0, Math.min(2, Math.floor(local.x * 3)));
+  const row = Math.max(0, Math.min(2, Math.floor(local.y * 3)));
   return row * 3 + col;
 }
 
@@ -71,18 +86,19 @@ function applyPlayerHold(
         : null;
 
   if (active) {
-    const cell = boardCellAt(active.cursor);
+    const local = cursorToBoardLocal(active.cursor, player);
+    const cell = boardCellAt(local);
     if (board.heldBy === player) {
-      return { ...board, heldCursor: active.cursor };
+      return { ...board, heldCursor: local };
     }
-    if (isAdjacentToEmpty(board, cell)) {
-      return { ...board, heldBy: player, heldPieceCell: cell, heldCursor: active.cursor };
+    if (cell >= 0 && isAdjacentToEmpty(board, cell)) {
+      return { ...board, heldBy: player, heldPieceCell: cell, heldCursor: local };
     }
     return board;
   }
 
   if (board.heldBy === player) {
-    const dropCell = boardCellAt(board.heldCursor ?? { x: 0, y: 0 });
+    const dropCell = boardCellAt(board.heldCursor ?? { x: -1, y: -1 });
     const src = board.heldPieceCell;
     const valid = dropCell === board.emptyIndex && isAdjacentToEmpty(board, src);
     if (valid) {
