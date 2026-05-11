@@ -4,15 +4,20 @@
   import { tick as gameTick } from '$lib/game/tick';
   import { EMPTY_GESTURES } from '$lib/game/state';
   import { onMount } from 'svelte';
+  import { animate, createTimeline, stagger } from 'animejs';
 
-  // SVG assets — Vite serves these from `static/` at the matching URL.
-  // We import the markup directly via `?raw` so we can inline it and
-  // recolor via CSS `currentColor`.
-  import playerSvg from '../../../static/illustrations/player.svg?raw';
-  import handPalmSvg from '../../../static/icons/hand-palm.svg?raw';
+  import playerSvg from '$lib/illustrations/player.svg?raw';
+  import handPalmSvg from '$lib/icons/hand-palm.svg?raw';
 
   function advance() {
     game.state = gameTick(game.state, { type: 'advanceFromSplash' }, EMPTY_GESTURES);
+  }
+
+  function prefersReducedMotion(): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    );
   }
 
   onMount(() => {
@@ -20,6 +25,60 @@
       if (e.code === 'Space' || e.code === 'Enter') advance();
     };
     window.addEventListener('keydown', onKey);
+
+    if (prefersReducedMotion()) {
+      // Simple fade-in only.
+      animate('[data-splash] > *', { opacity: [0, 1], duration: 200, easing: 'linear' });
+    } else {
+      const tl = createTimeline({ defaults: { ease: 'outQuad' } });
+
+      // (1) Branding tag slides down
+      tl.add('[data-splash-tag]', { opacity: [0, 1], translateY: [-12, 0], duration: 350 }, 0);
+
+      // (2) Title letters drop in with stagger + elastic overshoot
+      tl.add(
+        '[data-splash-letter]',
+        {
+          opacity: [0, 1],
+          translateY: [-40, 0],
+          rotate: [-15, 0],
+          duration: 700,
+          easing: 'outElastic(1, 0.55)',
+          delay: stagger(60)
+        },
+        150
+      );
+
+      // (3) Framing hands swing in from off-screen
+      tl.add(
+        '[data-splash-hand="left"]',
+        { opacity: [0, 1], translateX: [-200, 0], rotate: [-20, 0], duration: 600 },
+        400
+      );
+      tl.add(
+        '[data-splash-hand="right"]',
+        { opacity: [0, 1], translateX: [200, 0], rotate: [20, 0], duration: 600 },
+        400
+      );
+
+      // (4) Cartoon characters bounce up
+      tl.add(
+        '[data-splash-char]',
+        {
+          opacity: [0, 1],
+          translateY: [80, 0],
+          scaleY: [{ value: 0.7, duration: 0 }, { value: 1.1, duration: 250 }, { value: 1, duration: 200 }],
+          duration: 500,
+          delay: stagger(80)
+        },
+        700
+      );
+
+      // (5) Tagline + CTA
+      tl.add('[data-splash-tagline]', { opacity: [0, 1], translateY: [10, 0], duration: 400 }, 900);
+      tl.add('[data-splash-cta]', { opacity: [0, 1], scale: [0.92, 1], duration: 400 }, 950);
+    }
+
     return () => window.removeEventListener('keydown', onKey);
   });
 
