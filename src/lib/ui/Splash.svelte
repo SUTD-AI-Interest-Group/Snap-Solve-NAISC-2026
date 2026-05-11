@@ -28,7 +28,7 @@
 
     if (prefersReducedMotion()) {
       // Simple fade-in only.
-      animate('[data-splash] > *', { opacity: [0, 1], duration: 200, easing: 'linear' });
+      animate('[data-splash] > *', { opacity: [0, 1], duration: 200, ease: 'linear' });
     } else {
       const tl = createTimeline({ defaults: { ease: 'outQuad' } });
 
@@ -43,7 +43,7 @@
           translateY: [-40, 0],
           rotate: [-15, 0],
           duration: 700,
-          easing: 'outElastic(1, 0.55)',
+          ease: 'outElastic(1, 0.55)',
           delay: stagger(60)
         },
         150
