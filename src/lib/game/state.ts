@@ -20,7 +20,7 @@ export type GameState =
       p2Name: string;
       p1Ready: number;
       p2Ready: number;
-      autoCountdownMs: number | null;
+      bothStableMs: number | null;
     }
   | { phase: 'snip'; p1Name: string; p2Name: string; p1: SnipState; p2: SnipState }
   | { phase: 'countdown'; remainingMs: number; p1: PlayerSetup; p2: PlayerSetup }

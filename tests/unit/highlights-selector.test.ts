@@ -41,9 +41,33 @@ describe('selectHighlights', () => {
   it('detects a streak of 3+ progress swaps within a 5s window', () => {
     const events: HighlightEvent[] = [
       // 3 progress swaps for p1 within ~3s.
-      { kind: 'swap', player: 'p1', from: 0, to: 1, correctBefore: 0, correctAfter: 2, tMs: withT(10_000) },
-      { kind: 'swap', player: 'p1', from: 1, to: 2, correctBefore: 2, correctAfter: 4, tMs: withT(11_500) },
-      { kind: 'swap', player: 'p1', from: 2, to: 3, correctBefore: 4, correctAfter: 6, tMs: withT(12_800) }
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 0,
+        to: 1,
+        correctBefore: 0,
+        correctAfter: 2,
+        tMs: withT(10_000)
+      },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 1,
+        to: 2,
+        correctBefore: 2,
+        correctAfter: 4,
+        tMs: withT(11_500)
+      },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 2,
+        to: 3,
+        correctBefore: 4,
+        correctAfter: 6,
+        tMs: withT(12_800)
+      }
     ];
     const result = selectHighlights(events, t0, 'draw', 'alice', 'bob');
     const streak = result.find((h) => h.kind === 'streak');
@@ -56,9 +80,33 @@ describe('selectHighlights', () => {
 
   it('ignores swaps that do not increase correctCount', () => {
     const events: HighlightEvent[] = [
-      { kind: 'swap', player: 'p1', from: 0, to: 1, correctBefore: 2, correctAfter: 2, tMs: withT(10_000) },
-      { kind: 'swap', player: 'p1', from: 1, to: 2, correctBefore: 2, correctAfter: 2, tMs: withT(11_000) },
-      { kind: 'swap', player: 'p1', from: 2, to: 3, correctBefore: 2, correctAfter: 2, tMs: withT(12_000) }
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 0,
+        to: 1,
+        correctBefore: 2,
+        correctAfter: 2,
+        tMs: withT(10_000)
+      },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 1,
+        to: 2,
+        correctBefore: 2,
+        correctAfter: 2,
+        tMs: withT(11_000)
+      },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 2,
+        to: 3,
+        correctBefore: 2,
+        correctAfter: 2,
+        tMs: withT(12_000)
+      }
     ];
     const result = selectHighlights(events, t0, 'draw', 'alice', 'bob');
     expect(result.find((h) => h.kind === 'streak')).toBeUndefined();
@@ -81,9 +129,33 @@ describe('selectHighlights', () => {
   it('suppresses a streak that overlaps the winning window by >50%', () => {
     // win at 30s → window [27.5, 30.5]. Streak ending at 30s overlaps fully.
     const events: HighlightEvent[] = [
-      { kind: 'swap', player: 'p1', from: 0, to: 1, correctBefore: 5, correctAfter: 7, tMs: withT(28_000) },
-      { kind: 'swap', player: 'p1', from: 1, to: 2, correctBefore: 7, correctAfter: 8, tMs: withT(29_000) },
-      { kind: 'swap', player: 'p1', from: 2, to: 3, correctBefore: 8, correctAfter: 9, tMs: withT(30_000) },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 0,
+        to: 1,
+        correctBefore: 5,
+        correctAfter: 7,
+        tMs: withT(28_000)
+      },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 1,
+        to: 2,
+        correctBefore: 7,
+        correctAfter: 8,
+        tMs: withT(29_000)
+      },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 2,
+        to: 3,
+        correctBefore: 8,
+        correctAfter: 9,
+        tMs: withT(30_000)
+      },
       { kind: 'win', player: 'p1', tMs: withT(30_000) }
     ];
     const result = selectHighlights(events, t0, 'p1', 'alice', 'bob');
@@ -94,9 +166,33 @@ describe('selectHighlights', () => {
   it('returns at most 3 highlights', () => {
     const events: HighlightEvent[] = [
       { kind: 'win', player: 'p1', tMs: withT(50_000) },
-      { kind: 'swap', player: 'p1', from: 0, to: 1, correctBefore: 0, correctAfter: 2, tMs: withT(10_000) },
-      { kind: 'swap', player: 'p1', from: 1, to: 2, correctBefore: 2, correctAfter: 4, tMs: withT(11_000) },
-      { kind: 'swap', player: 'p1', from: 2, to: 3, correctBefore: 4, correctAfter: 6, tMs: withT(12_000) },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 0,
+        to: 1,
+        correctBefore: 0,
+        correctAfter: 2,
+        tMs: withT(10_000)
+      },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 1,
+        to: 2,
+        correctBefore: 2,
+        correctAfter: 4,
+        tMs: withT(11_000)
+      },
+      {
+        kind: 'swap',
+        player: 'p1',
+        from: 2,
+        to: 3,
+        correctBefore: 4,
+        correctAfter: 6,
+        tMs: withT(12_000)
+      },
       { kind: 'leadFlip', leader: 'p1', p1Correct: 4, p2Correct: 3, tMs: withT(20_000) }
     ];
     const result = selectHighlights(events, t0, 'p1', 'alice', 'bob');

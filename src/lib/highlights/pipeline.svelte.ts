@@ -63,7 +63,8 @@ export async function runPipeline(
   pipeline.stage = 'clipping';
   pipeline.totalClips = windows.length;
 
-  const clipped: Array<{ window: (typeof windows)[number]; gif: Blob; firstFrame: ImageBitmap }> = [];
+  const clipped: Array<{ window: (typeof windows)[number]; gif: Blob; firstFrame: ImageBitmap }> =
+    [];
   for (const window of windows) {
     try {
       const { gif, firstFrame } = await clipToGif(recording, window, signal);

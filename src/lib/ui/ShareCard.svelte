@@ -75,7 +75,7 @@
         {#each pipeline.highlights as h}
           <button
             type="button"
-            class="rounded border px-3 py-1 font-mono text-xs uppercase tracking-wide hover:opacity-80"
+            class="rounded border px-3 py-1 font-mono text-xs tracking-wide uppercase hover:opacity-80"
             style="border-color: var(--color-primary); color: var(--color-primary);"
             onclick={() => downloadGif(h.gif, h.kind)}
           >

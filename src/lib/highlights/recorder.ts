@@ -5,11 +5,7 @@ export interface RecorderHandle {
   stop(): Promise<{ blob: Blob; durationMs: number }>;
 }
 
-const MIME_CANDIDATES = [
-  'video/webm;codecs=vp9',
-  'video/webm;codecs=vp8',
-  'video/webm'
-] as const;
+const MIME_CANDIDATES = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'] as const;
 
 function pickMime(): string {
   for (const m of MIME_CANDIDATES) {

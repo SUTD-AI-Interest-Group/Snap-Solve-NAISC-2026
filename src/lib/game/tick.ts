@@ -15,7 +15,7 @@ import { rectFromCorners, clampToPlayerHalf, hasMinSize } from './snip';
 export type TickResult = { state: GameState; events: HighlightEvent[] };
 
 const READY_HOLD_TARGET_MS = 2000;
-const AUTO_COUNTDOWN_MS = 3000;
+const BOTH_STABLE_DWELL_MS = 1000;
 const SNIP_HOLD_MS = 1500;
 const SOLVE_DURATION_MS = 5 * 60 * 1000;
 
@@ -97,7 +97,10 @@ function applyPlayerHoldWithSignal(
       return { board: { ...board, heldCursor: local }, swap: null };
     }
     if (cell >= 0) {
-      return { board: { ...board, heldBy: player, heldPieceCell: cell, heldCursor: local }, swap: null };
+      return {
+        board: { ...board, heldBy: player, heldPieceCell: cell, heldCursor: local },
+        swap: null
+      };
     }
     return { board, swap: null };
   }
@@ -120,7 +123,8 @@ function applyPlayerHoldWithSignal(
 }
 
 export function tick(state: GameState, event: GameEvent, gestures: GestureSnapshot): TickResult {
-  if (event.type === 'newPlayers') return { state: { phase: 'nicknames', p1Name: '', p2Name: '' }, events: [] };
+  if (event.type === 'newPlayers')
+    return { state: { phase: 'nicknames', p1Name: '', p2Name: '' }, events: [] };
   if (event.type === 'rematch' && state.phase === 'result') {
     return {
       state: {
@@ -129,7 +133,7 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
         p2Name: state.p2.name,
         p1Ready: 0,
         p2Ready: 0,
-        autoCountdownMs: null
+        bothStableMs: null
       },
       events: []
     };
@@ -137,7 +141,8 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
 
   switch (state.phase) {
     case 'splash':
-      if (event.type === 'advanceFromSplash') return { state: { phase: 'nicknames', p1Name: '', p2Name: '' }, events: [] };
+      if (event.type === 'advanceFromSplash')
+        return { state: { phase: 'nicknames', p1Name: '', p2Name: '' }, events: [] };
       return { state, events: [] };
 
     case 'nicknames':
@@ -149,7 +154,7 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
             p2Name: event.p2Name,
             p1Ready: 0,
             p2Ready: 0,
-            autoCountdownMs: null
+            bothStableMs: null
           },
           events: []
         };
@@ -166,8 +171,8 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
       const bothFull = p1Ready >= READY_HOLD_TARGET_MS && p2Ready >= READY_HOLD_TARGET_MS;
 
       if (bothFull) {
-        const remaining = (state.autoCountdownMs ?? AUTO_COUNTDOWN_MS) - dt;
-        if (remaining <= 0) {
+        const stable = (state.bothStableMs ?? 0) + dt;
+        if (stable >= BOTH_STABLE_DWELL_MS) {
           return {
             state: {
               phase: 'snip',
@@ -179,9 +184,9 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
             events: []
           };
         }
-        return { state: { ...state, p1Ready, p2Ready, autoCountdownMs: remaining }, events: [] };
+        return { state: { ...state, p1Ready, p2Ready, bothStableMs: stable }, events: [] };
       }
-      return { state: { ...state, p1Ready, p2Ready, autoCountdownMs: null }, events: [] };
+      return { state: { ...state, p1Ready, p2Ready, bothStableMs: null }, events: [] };
     }
 
     case 'snip': {
@@ -240,11 +245,27 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
       // Emit swap events
       if (p1Result.swap) {
         const sig = p1Result.swap;
-        events.push({ kind: 'swap', player: 'p1', from: sig.from, to: sig.to, correctBefore: sig.correctBefore, correctAfter: sig.correctAfter, tMs: nowMs });
+        events.push({
+          kind: 'swap',
+          player: 'p1',
+          from: sig.from,
+          to: sig.to,
+          correctBefore: sig.correctBefore,
+          correctAfter: sig.correctAfter,
+          tMs: nowMs
+        });
       }
       if (p2Result.swap) {
         const sig = p2Result.swap;
-        events.push({ kind: 'swap', player: 'p2', from: sig.from, to: sig.to, correctBefore: sig.correctBefore, correctAfter: sig.correctAfter, tMs: nowMs });
+        events.push({
+          kind: 'swap',
+          player: 'p2',
+          from: sig.from,
+          to: sig.to,
+          correctBefore: sig.correctBefore,
+          correctAfter: sig.correctAfter,
+          tMs: nowMs
+        });
       }
 
       // Lead-flip detection

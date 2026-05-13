@@ -43,7 +43,11 @@ describe('tick - splash', () => {
 describe('tick - nicknames', () => {
   it('advances to trackingCheck on submission', () => {
     const s0: GameState = { phase: 'nicknames', p1Name: '', p2Name: '' };
-    const { state: s } = tick(s0, { type: 'nicknamesSubmitted', p1Name: 'A', p2Name: 'B' }, EMPTY_GESTURES);
+    const { state: s } = tick(
+      s0,
+      { type: 'nicknamesSubmitted', p1Name: 'A', p2Name: 'B' },
+      EMPTY_GESTURES
+    );
     expect(s.phase).toBe('trackingCheck');
     if (s.phase === 'trackingCheck') {
       expect(s.p1Name).toBe('A');
@@ -61,7 +65,7 @@ describe('tick - trackingCheck readiness', () => {
       p2Name: 'B',
       p1Ready: 0,
       p2Ready: 0,
-      autoCountdownMs: null
+      bothStableMs: null
     };
     const { state: s } = tick(s0, { type: 'tick', dtMs: 500 }, g);
     expect(s.phase).toBe('trackingCheck');
@@ -78,7 +82,7 @@ describe('tick - trackingCheck readiness', () => {
       p2Name: 'B',
       p1Ready: 1000,
       p2Ready: 500,
-      autoCountdownMs: null
+      bothStableMs: null
     };
     const { state: s } = tick(s0, { type: 'tick', dtMs: 16 }, EMPTY_GESTURES);
     if (s.phase === 'trackingCheck') {
@@ -87,7 +91,7 @@ describe('tick - trackingCheck readiness', () => {
     }
   });
 
-  it('transitions to snip after the auto-countdown elapses', () => {
+  it('transitions to snip after the both-stable dwell elapses', () => {
     const g = bothHands(0.2, 0.3, 0.7, 0.8);
     let s: GameState = {
       phase: 'trackingCheck',
@@ -95,10 +99,10 @@ describe('tick - trackingCheck readiness', () => {
       p2Name: 'B',
       p1Ready: 0,
       p2Ready: 0,
-      autoCountdownMs: null
+      bothStableMs: null
     };
-    // Need ~5 seconds total: 2s for readiness + 3s auto-countdown.
-    for (let i = 0; i < 30; i++) s = tick(s, { type: 'tick', dtMs: 200 }, g).state;
+    // Need ~3 seconds total: 2s to fill both bars + 1s of stable both-full hold.
+    for (let i = 0; i < 18; i++) s = tick(s, { type: 'tick', dtMs: 200 }, g).state;
     expect(s.phase).toBe('snip');
   });
 });
@@ -363,7 +367,10 @@ describe('tick - highlights events', () => {
         left: { present: true, pinch: 'holding', cursor: holdCursor },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
-      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p2: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
     const r1 = tick(s0, { type: 'tick', dtMs: 16 }, g1);
     expect(r1.state.phase).toBe('solve');
@@ -375,7 +382,10 @@ describe('tick - highlights events', () => {
         left: { present: true, pinch: 'holding', cursor: moveCursor },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
-      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p2: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
     const r2 = tick(r1.state, { type: 'tick', dtMs: 16 }, g2);
     expect(r2.state.phase).toBe('solve');
@@ -386,10 +396,15 @@ describe('tick - highlights events', () => {
         left: { present: true, pinch: 'idle', cursor: moveCursor },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
-      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p2: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
     const r3 = tick(r2.state, { type: 'tick', dtMs: 16 }, g3);
-    const swapEvent = r3.events.find((e): e is Extract<HighlightEvent, { kind: 'swap' }> => e.kind === 'swap');
+    const swapEvent = r3.events.find(
+      (e): e is Extract<HighlightEvent, { kind: 'swap' }> => e.kind === 'swap'
+    );
     expect(swapEvent).toBeDefined();
     expect(swapEvent?.player).toBe('p1');
   });
@@ -403,7 +418,9 @@ describe('tick - highlights events', () => {
       p2: { ...stub, board: bSwap(makeSolvedBoard(), 0, 1) }
     };
     const result = tick(s0, { type: 'tick', dtMs: 16 }, EMPTY_GESTURES);
-    const winEvent = result.events.find((e): e is Extract<HighlightEvent, { kind: 'win' }> => e.kind === 'win');
+    const winEvent = result.events.find(
+      (e): e is Extract<HighlightEvent, { kind: 'win' }> => e.kind === 'win'
+    );
     expect(winEvent).toBeDefined();
     expect(winEvent?.player).toBe('p1');
     expect(result.state.phase).toBe('result');
@@ -416,11 +433,11 @@ describe('tick - highlights events', () => {
     // triggers a swap that increases p2's count past p1's.
 
     // p1 board: 7 correct (piece 0 and 1 swapped)
-    const p1Board = bSwap(makeSolvedBoard(), 0, 1); // correctCount=7
+    const _p1Board = bSwap(makeSolvedBoard(), 0, 1); // correctCount=7
 
     // p2 board: 5 correct (pieces 0,1,2,3 all disturbed — two swaps)
     // bSwap(makeSolvedBoard(), 0,1) = 7 correct; bSwap that result with 2,3 = 5 correct
-    const p2BoardBase = bSwap(bSwap(makeSolvedBoard(), 0, 1), 2, 3); // correctCount=5
+    const _p2BoardBase = bSwap(bSwap(makeSolvedBoard(), 0, 1), 2, 3); // correctCount=5
 
     // Give p2 a held piece over cell 0, heldCursor pointing at cell 2.
     // When released, pieces 0 and 2 are swapped:
@@ -431,9 +448,9 @@ describe('tick - highlights events', () => {
     // Build a board where p2 has correctCount=5, but a pending swap that brings
     // it to 8: start from solved, swap cell4 and cell5 to get 7 correct, then
     // set up hold to swap them back.
-    const p2BoardForFlip = (() => {
+    const _p2BoardForFlip = (() => {
       // Swap cells 4 and 5: correctCount = 7
-      const b = bSwap(makeSolvedBoard(), 4, 5);
+      const _b = bSwap(makeSolvedBoard(), 4, 5);
       // Now hold piece at cell 4 (which contains value 5), cursor at cell 5.
       // On release, swapping back gives correctCount=9, but we don't want p2 to win.
       // Instead use a board where p2 has correctCount=5 but swap goes to 7:
@@ -442,7 +459,12 @@ describe('tick - highlights events', () => {
       // hold cell2 (value=3) and heldCursor over cell3 (value=2):
       // after swap: [1,0,2,3,4,5,6,7,8] correctCount=7
       const b2 = bSwap(bSwap(makeSolvedBoard(), 0, 1), 2, 3); // correctCount=5
-      const b3 = { ...b2, heldBy: 'p2' as const, heldPieceCell: 2, heldCursor: { x: (3 % 3 + 0.5) / 3, y: (Math.floor(3 / 3) + 0.5) / 3 } };
+      const b3 = {
+        ...b2,
+        heldBy: 'p2' as const,
+        heldPieceCell: 2,
+        heldCursor: { x: ((3 % 3) + 0.5) / 3, y: (Math.floor(3 / 3) + 0.5) / 3 }
+      };
       return b3;
     })();
 
@@ -550,7 +572,7 @@ describe('tick - highlights events', () => {
       const b = bSwap(bSwap(makeSolvedBoard(), 0, 1), 2, 3); // [1,0,3,2,4,5,6,7,8] correctCount=5
       // Hold piece at cell 0, heldCursor pointing at cell 1.
       // Swap(0,1): cells=[0,1,3,2,...] → 0:✓,1:✓,2:3≠2✗,3:2≠3✗ → correctCount=7
-      const heldCursor = { x: (1 % 3 + 0.5) / 3, y: (Math.floor(1 / 3) + 0.5) / 3 };
+      const heldCursor = { x: ((1 % 3) + 0.5) / 3, y: (Math.floor(1 / 3) + 0.5) / 3 };
       return { ...b, heldBy: 'p2' as const, heldPieceCell: 0, heldCursor };
     })();
     expect(p2BoardPreFlip.correctCount).toBe(5);
@@ -566,8 +588,14 @@ describe('tick - highlights events', () => {
 
     // Tick with p2 releasing (pinch=idle) — causes the swap
     const g: GestureSnapshot = {
-      p1: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } },
-      p2: { left: { present: true, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p1: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      },
+      p2: {
+        left: { present: true, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
 
     const result = tick(stateBeforeFlip, { type: 'tick', dtMs: 16 }, g);

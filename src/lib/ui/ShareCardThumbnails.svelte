@@ -26,7 +26,7 @@
         class="rounded border-2"
         style="border-color: var(--color-primary); background: #000;"
       ></canvas>
-      <span class="font-mono text-[10px] uppercase tracking-wide opacity-70">{h.kind}</span>
+      <span class="font-mono text-[10px] tracking-wide uppercase opacity-70">{h.kind}</span>
     </div>
   {/each}
 </div>
