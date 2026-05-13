@@ -30,6 +30,7 @@
   import SolvePhase from './SolvePhase.svelte';
   import ResultScreen from './ResultScreen.svelte';
   import MuteButton from './MuteButton.svelte';
+  import OfflineIndicator from './OfflineIndicator.svelte';
   import PauseMenu from './PauseMenu.svelte';
 
   let cam: WebcamHandle | null = null;
@@ -445,6 +446,7 @@
 <canvas bind:this={canvas} class="fixed inset-0 w-screen h-screen z-0"></canvas>
 
 <MuteButton />
+<OfflineIndicator />
 
 {#if permError || trackingError}
   <div class="absolute inset-0 flex items-center justify-center z-50 backdrop-blur-sm" style="background: rgba(34, 27, 22, 0.85);">
