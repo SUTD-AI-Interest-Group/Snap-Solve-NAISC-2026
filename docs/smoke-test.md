@@ -32,6 +32,16 @@ Run before each commit-to-main and before the conference. Browser: Chrome (lates
 - Run on the actual demo laptop, with the actual webcam, under approximate booth lighting.
 - 4 hands present, mid-game (solve phase): MediaPipe detection ≥ 20 FPS, render ≥ 30 FPS.
 
+## Offline boot
+
+1. [ ] Visit production URL while online; let splash render.
+2. [ ] DevTools → Application → Service Workers → confirm `service-worker.js` is `activated and running`.
+3. [ ] DevTools → Application → Cache Storage → confirm `snap-solve-<version>` is populated (includes `/mediapipe/wasm/`, `/mediapipe/hand_landmarker.task`, `/audio/*`, app shell).
+4. [ ] DevTools → Network → check "Offline".
+5. [ ] Hard refresh (Ctrl/Cmd+Shift+R). Splash must render, tracking-check must work, one full game round must complete.
+6. [ ] Confirm the "Offline · cached" pill is visible in top-left.
+7. [ ] Toggle Network back online; pill disappears.
+
 ## Conference-day pre-flight
 
 - [ ] Pre-build with `npm run build && npm run preview`. Bookmark `http://localhost:4173`.
