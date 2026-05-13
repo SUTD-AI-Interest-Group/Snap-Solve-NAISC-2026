@@ -18,6 +18,7 @@
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/vite": "^4.3.0",
     "@types/animejs": "^3.1.13",
+    "fake-indexeddb": "^6.2.5",
     "svelte": "^5.1.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^4.3.0",
