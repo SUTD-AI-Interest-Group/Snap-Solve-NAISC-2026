@@ -1,4 +1,4 @@
-import { PUBLIC_HIGHLIGHTS_FUNCTION_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import type { HighlightEvent, GameMeta } from '$lib/game/state';
 import { clipToGif } from './clipper';
 import { selectHighlights, type HighlightKind } from './selector';
@@ -94,7 +94,13 @@ export async function runPipeline(
   }
 
   pipeline.stage = 'uploading';
-  const uploaded = await uploadGame(meta, clipped, PUBLIC_HIGHLIGHTS_FUNCTION_URL);
+  const functionUrl = env.PUBLIC_HIGHLIGHTS_FUNCTION_URL ?? '';
+  if (!functionUrl) {
+    pipeline.stage = 'error';
+    pipeline.errorMessage = 'Highlights function URL not configured.';
+    return;
+  }
+  const uploaded = await uploadGame(meta, clipped, functionUrl);
   if (!uploaded) {
     pipeline.stage = 'error';
     pipeline.errorMessage = 'Could not save your highlights to the cloud.';
