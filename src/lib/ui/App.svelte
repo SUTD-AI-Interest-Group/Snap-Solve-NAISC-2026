@@ -446,9 +446,17 @@
       canvas &&
       !recorderHandle
     ) {
+      // Reset the event log every match, even if the recorder fails to
+      // start. Otherwise pushEvents would keep accumulating into the
+      // previous match's events forever (selector would still pick the
+      // first match's win — and memory would grow unbounded).
+      resetEventLog(performance.now());
       try {
         const handle = startRecording(canvas);
         recorderHandle = handle;
+        // Re-align the event-log start to the recorder's exact start time
+        // when recording is active; this is a tiny adjustment but matters
+        // for sub-frame precision in clipper seek targets.
         resetEventLog(handle.startedAtMs);
       } catch (e) {
         console.warn('startRecording failed; highlights disabled this match', e);

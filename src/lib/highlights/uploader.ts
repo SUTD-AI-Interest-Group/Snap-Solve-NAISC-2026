@@ -14,22 +14,20 @@ export async function uploadGame(
 ): Promise<UploadedGame | null> {
   const sb = supabase();
 
-  // 1. Create the game row.
-  const { data: game, error: gameErr } = await sb
-    .from('games')
-    .insert({
-      p1_name: meta.p1Name.slice(0, 32),
-      p2_name: meta.p2Name.slice(0, 32),
-      winner: meta.winner,
-      duration_ms: meta.durationMs
-    })
-    .select()
-    .single();
-  if (gameErr || !game) {
-    console.error('uploadGame: games insert failed', gameErr);
+  // 1. Create the game row via SECURITY DEFINER RPC. We don't grant anon
+  // SELECT on `games` (to prevent enumeration), so a direct
+  // `.insert().select().single()` would fail to return the new id. The RPC
+  // does the insert + returns the id with the definer's privileges.
+  const { data: gameId, error: gameErr } = await sb.rpc('create_game', {
+    p1: meta.p1Name.slice(0, 32),
+    p2: meta.p2Name.slice(0, 32),
+    w: meta.winner,
+    dur: meta.durationMs
+  });
+  if (gameErr || !gameId || typeof gameId !== 'string') {
+    console.error('uploadGame: create_game RPC failed', gameErr);
     return null;
   }
-  const gameId: string = game.id;
 
   // 2. Upload each GIF + insert highlight row.
   let successCount = 0;
@@ -52,14 +50,24 @@ export async function uploadGame(
     });
     if (rowErr) {
       console.warn(`uploadGame: highlights row insert failed for ${path}`, rowErr);
+      // Storage upload already succeeded — clean up the orphan object so
+      // the bucket doesn't accumulate untracked files. The cap trigger only
+      // deletes objects for rows it deletes; it can't see rows that were
+      // never inserted.
+      const { error: rmErr } = await sb.storage.from('highlights').remove([path]);
+      if (rmErr) console.warn(`uploadGame: orphan storage cleanup failed for ${path}`, rmErr);
       continue;
     }
     successCount += 1;
   }
 
-  // 3. If nothing made it, undo the orphan games row + return null.
+  // 3. If nothing made it, undo the orphan games row + return null. The
+  // delete_empty_game RPC is safer than a direct delete (it only removes
+  // rows with no highlights — guarding against a race where someone else
+  // attached highlights to this game id between insert and rollback).
   if (successCount === 0) {
-    await sb.from('games').delete().eq('id', gameId);
+    const { error: delErr } = await sb.rpc('delete_empty_game', { game_id: gameId });
+    if (delErr) console.warn(`uploadGame: orphan game rollback failed`, delErr);
     return null;
   }
 

@@ -6,15 +6,25 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+const envOk = !!SUPABASE_URL && !!SUPABASE_SERVICE_ROLE_KEY;
+if (!envOk) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env');
 }
 
-const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+// Only create the client when env is present; otherwise leave it null and
+// short-circuit each request with a 500 + helpful page. Avoids a runtime
+// crash inside createClient with undefined args.
+const supabase = envOk ? createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!) : null;
 
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 Deno.serve(async (req) => {
+  if (!supabase) {
+    return htmlResponse(
+      notFoundHtml('Highlights service is misconfigured — please contact the booth team.'),
+      500
+    );
+  }
   if (req.method !== 'GET') {
     return new Response('Method Not Allowed', { status: 405 });
   }

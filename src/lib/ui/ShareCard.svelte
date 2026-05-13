@@ -1,24 +1,27 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import QRCode from 'qrcode';
   import { pipeline, runPipeline, resetPipeline } from '$lib/highlights/pipeline.svelte';
   import { lastRecording } from '$lib/highlights/recordingStore.svelte';
   import ShareCardThumbnails from './ShareCardThumbnails.svelte';
 
   let qrDataUrl = $state<string | null>(null);
-
-  onMount(() => {
+  // The recorder finalises asynchronously after solve → result, so blob/meta
+  // arrive AFTER ShareCard mounts. Watch reactively and kick the pipeline
+  // exactly once when all three fields are ready.
+  let pipelineKickedOff = $state(false);
+  $effect(() => {
+    if (pipelineKickedOff) return;
     const { blob, events, startedAtMs, meta } = lastRecording;
-    if (blob && startedAtMs != null && meta) {
-      runPipeline(blob, events, startedAtMs, meta).catch((e) => {
-        console.error('runPipeline rejected', e);
-      });
-    } else {
-      console.warn('ShareCard: no recording in store');
-    }
-    return () => {
-      resetPipeline();
-    };
+    if (!blob || startedAtMs == null || !meta) return;
+    pipelineKickedOff = true;
+    runPipeline(blob, events, startedAtMs, meta).catch((e) => {
+      console.error('runPipeline rejected', e);
+    });
+  });
+
+  onDestroy(() => {
+    resetPipeline();
   });
 
   // Render QR whenever a landingUrl appears.
