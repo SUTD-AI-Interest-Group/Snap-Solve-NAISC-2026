@@ -13,9 +13,27 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
-          // Skip registration in local dev so HMR isn't intercepted.
           var host = window.location.hostname;
-          if (host === 'localhost' || host === '127.0.0.1') return;
+          var isLocal = host === 'localhost' || host === '127.0.0.1';
+          if (isLocal) {
+            // In local dev we don't WANT the SW: it intercepts HMR.
+            // Skipping `register()` isn't enough — a SW registered by a
+            // prior session (or a different project on the same port) can
+            // still be controlling this page. Unregister anything we find
+            // and clear its caches so the next reload is clean.
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              if (regs.length === 0) return;
+              Promise.all(regs.map(function (r) { return r.unregister(); }))
+                .then(function () {
+                  if ('caches' in window) {
+                    return caches.keys().then(function (keys) {
+                      return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+                    });
+                  }
+                });
+            });
+            return;
+          }
           navigator.serviceWorker.register('/service-worker.js').catch(function (e) {
             console.warn('SW registration failed:', e);
           });

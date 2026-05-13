@@ -3,12 +3,16 @@
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 
-import { build, files, version } from '$service-worker';
+import { build, files, prerendered, version } from '$service-worker';
 
 declare const self: ServiceWorkerGlobalScope;
 
 const CACHE = `snap-solve-${version}`;
-const PRECACHE = [...build, ...files];
+// `build` is the compiled JS/CSS bundle; `files` is everything under static/;
+// `prerendered` is the list of prerendered HTML routes (typically ['/']).
+// Including all three means an offline hard-refresh of the app shell hits
+// cache instead of failing.
+const PRECACHE = [...build, ...files, ...prerendered];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -32,6 +36,19 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Navigation fallback: an offline page load for an uncached route should
+  // still serve the cached app shell (prerendered "/"), letting the SPA
+  // bootstrap and render whatever screen makes sense.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      caches
+        .match(event.request)
+        .then((hit) => hit ?? caches.match('/'))
+        .then((hit) => hit ?? fetch(event.request))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((hit) => {
