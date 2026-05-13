@@ -47,6 +47,7 @@ export function drawLockedSnip(ctx: CanvasRenderingContext2D, rect: Rect, color:
     [x + rect.w * w - s, y],
     [x, y + rect.h * h - s],
     [x + rect.w * w - s, y + rect.h * h - s]
-  ]) ctx.fillRect(cx, cy, s, s);
+  ])
+    ctx.fillRect(cx, cy, s, s);
   ctx.restore();
 }

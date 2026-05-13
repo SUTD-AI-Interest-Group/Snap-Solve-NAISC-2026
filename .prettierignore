@@ -1,0 +1,8 @@
+node_modules
+.svelte-kit
+build
+dist
+static/mediapipe
+static/audio
+package-lock.json
+*.svg

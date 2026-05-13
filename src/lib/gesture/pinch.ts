@@ -23,9 +23,7 @@ export function normalizedPinchDistance(hand: Hand): number {
 export function advancePinchState(prev: PinchState, distance: number, dtMs: number): PinchState {
   switch (prev.kind) {
     case 'idle':
-      return distance < ENGAGE
-        ? { kind: 'pinching', heldMs: 0 }
-        : { kind: 'idle', heldMs: 0 };
+      return distance < ENGAGE ? { kind: 'pinching', heldMs: 0 } : { kind: 'idle', heldMs: 0 };
     case 'pinching': {
       if (distance >= ENGAGE) return { kind: 'idle', heldMs: 0 };
       const next = prev.heldMs + dtMs;

@@ -4,7 +4,12 @@ import 'fake-indexeddb/auto';
 import fakeIndexedDB from 'fake-indexeddb';
 const FDBFactory = (fakeIndexedDB as any).constructor as new () => IDBFactory;
 import { beforeEach, describe, expect, it } from 'vitest';
-import { recordWin, getTopScores, clearLeaderboard, _resetForTests } from '../../src/lib/db/leaderboard';
+import {
+  recordWin,
+  getTopScores,
+  clearLeaderboard,
+  _resetForTests
+} from '../../src/lib/db/leaderboard';
 
 describe('leaderboard', () => {
   beforeEach(async () => {

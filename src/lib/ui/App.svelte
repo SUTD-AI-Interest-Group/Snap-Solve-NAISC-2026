@@ -240,8 +240,14 @@
           p2Setup: { name: state.p2Name, snip: p2.snapshot, pieces: p2Pieces }
         },
         {
-          p1: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } },
-          p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+          p1: {
+            left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+            right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+          },
+          p2: {
+            left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+            right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+          }
         }
       );
     } catch (e) {
@@ -271,8 +277,10 @@
     }
     // Slide SFX: detect change in correctCount
     if (s.phase === 'solve') {
-      if (lastSlideCounts.p1 !== -1 && s.p1.board.correctCount !== lastSlideCounts.p1) playSfx('slide');
-      if (lastSlideCounts.p2 !== -1 && s.p2.board.correctCount !== lastSlideCounts.p2) playSfx('slide');
+      if (lastSlideCounts.p1 !== -1 && s.p1.board.correctCount !== lastSlideCounts.p1)
+        playSfx('slide');
+      if (lastSlideCounts.p2 !== -1 && s.p2.board.correctCount !== lastSlideCounts.p2)
+        playSfx('slide');
       lastSlideCounts.p1 = s.p1.board.correctCount;
       lastSlideCounts.p2 = s.p2.board.correctCount;
       // Pickup SFX: detect heldBy edge
@@ -304,9 +312,7 @@
       ctx.clearRect(0, 0, cv.width, cv.height);
     }
 
-    const showLandmarks =
-      game.state.phase === 'trackingCheck' ||
-      game.state.phase === 'snip';
+    const showLandmarks = game.state.phase === 'trackingCheck' || game.state.phase === 'snip';
     if (showLandmarks && lastFrame) {
       const p1Color = CANVAS_COLORS.p1;
       const p2Color = CANVAS_COLORS.p2;
@@ -334,7 +340,11 @@
       }
     }
 
-    if (game.state.phase === 'solve' || game.state.phase === 'countdown' || game.state.phase === 'result') {
+    if (
+      game.state.phase === 'solve' ||
+      game.state.phase === 'countdown' ||
+      game.state.phase === 'result'
+    ) {
       // Use the same normalized boxes as the gesture logic so the cursor and
       // the visual grid agree.
       const p1Norm = getBoardArea('p1');
@@ -356,8 +366,10 @@
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.fillRect(p1Area.x - 8, p1Area.y - 8, p1Area.w + 16, p1Area.h + 16);
         ctx.fillRect(p2Area.x - 8, p2Area.y - 8, p2Area.w + 16, p2Area.h + 16);
-        if (game.state.p1.snip) ctx.drawImage(game.state.p1.snip, p1Area.x, p1Area.y, p1Area.w, p1Area.h);
-        if (game.state.p2.snip) ctx.drawImage(game.state.p2.snip, p2Area.x, p2Area.y, p2Area.w, p2Area.h);
+        if (game.state.p1.snip)
+          ctx.drawImage(game.state.p1.snip, p1Area.x, p1Area.y, p1Area.w, p1Area.h);
+        if (game.state.p2.snip)
+          ctx.drawImage(game.state.p2.snip, p2Area.x, p2Area.y, p2Area.w, p2Area.h);
         ctx.restore();
       }
       if (game.state.phase === 'result') {
@@ -390,10 +402,7 @@
       } else if (game.state.phase === 'solve') {
         // One hand per player (collapsed into the left slot by pickSolveHand).
         // Pointer sits on the index fingertip; selection ring lights up when pinched.
-        for (const [side, color] of [
-          ['p1', p1Color] as const,
-          ['p2', p2Color] as const
-        ]) {
+        for (const [side, color] of [['p1', p1Color] as const, ['p2', p2Color] as const]) {
           const h = lastGestures[side].left;
           if (!h.present) continue;
           const selected = h.pinch === 'pinching' || h.pinch === 'holding';
@@ -443,24 +452,29 @@
   });
 </script>
 
-<canvas bind:this={canvas} class="fixed inset-0 w-screen h-screen z-0"></canvas>
+<canvas bind:this={canvas} class="fixed inset-0 z-0 h-screen w-screen"></canvas>
 
 <MuteButton />
 <OfflineIndicator />
 
 {#if permError || trackingError}
-  <div class="absolute inset-0 flex items-center justify-center z-50 backdrop-blur-sm" style="background: rgba(34, 27, 22, 0.85);">
+  <div
+    class="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+    style="background: rgba(34, 27, 22, 0.85);"
+  >
     <div
-      class="border-2 p-10 rounded-2xl max-w-lg text-center"
+      class="max-w-lg rounded-2xl border-2 p-10 text-center"
       style="background: var(--color-bg); border-color: var(--color-primary); color: var(--color-ink);"
     >
-      <h3 class="font-display text-4xl mb-4 tracking-tight" style="color: var(--color-primary);">
+      <h3 class="font-display mb-4 text-4xl tracking-tight" style="color: var(--color-primary);">
         {permError ? 'Camera access needed' : 'Setup error'}
       </h3>
-      <p class="font-sans text-base md:text-lg opacity-85 leading-relaxed">{permError ?? trackingError}</p>
-      <div class="mt-6 flex gap-3 justify-center">
+      <p class="font-sans text-base leading-relaxed opacity-85 md:text-lg">
+        {permError ?? trackingError}
+      </p>
+      <div class="mt-6 flex justify-center gap-3">
         <button
-          class="font-display tracking-wide px-6 py-3 rounded-xl text-lg disabled:opacity-50"
+          class="font-display rounded-xl px-6 py-3 text-lg tracking-wide disabled:opacity-50"
           style="background: var(--color-primary); color: var(--color-bg);"
           disabled={initializing}
           onclick={retry}
@@ -468,7 +482,7 @@
           {initializing ? 'Trying…' : 'Retry'}
         </button>
         <button
-          class="font-display tracking-wide px-6 py-3 border-2 rounded-xl text-lg"
+          class="font-display rounded-xl border-2 px-6 py-3 text-lg tracking-wide"
           style="border-color: var(--color-ink); color: var(--color-ink); opacity: 0.7;"
           onclick={() => location.reload()}
         >
