@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, untrack } from 'svelte';
+  import { onMount } from 'svelte';
   import { openWebcam, type WebcamHandle } from '$lib/vision/webcam';
   import { initHandLandmarker } from '$lib/vision/mediapipe';
   import { startFrameLoop } from '$lib/vision/frameLoop';
@@ -9,7 +9,6 @@
   import { getCursorPoint } from '$lib/gesture/cursor';
   import { captureSnip } from '$lib/game/snip';
   import { sliceSnipInto9Pieces } from '$lib/game/slicer';
-  import { pushResult } from '$lib/game/history';
   import { resizeCanvasToDisplay, drawVideoMirrored } from '$lib/render/canvas';
   import { drawHandLandmarks } from '$lib/render/drawLandmarks';
   import { drawSnipRect, drawLockedSnip } from '$lib/render/drawSnipRect';
@@ -411,22 +410,6 @@
       }
     }
   }
-
-  // History capture on entering result phase
-  $effect(() => {
-    if (game.state.phase === 'result') {
-      const s = game.state;
-      untrack(() => {
-        pushResult({
-          p1Name: s.p1.name,
-          p2Name: s.p2.name,
-          winner: s.winner,
-          durationMs: s.durationMs,
-          timestamp: Date.now()
-        });
-      });
-    }
-  });
 
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {

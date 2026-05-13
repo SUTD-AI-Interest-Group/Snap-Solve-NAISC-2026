@@ -39,7 +39,7 @@ Run before each commit-to-main and before the conference. Browser: Chrome (lates
 3. [ ] DevTools → Application → Cache Storage → confirm `snap-solve-<version>` is populated (includes `/mediapipe/wasm/`, `/mediapipe/hand_landmarker.task`, `/audio/*`, app shell).
 4. [ ] DevTools → Network → check "Offline".
 5. [ ] Hard refresh (Ctrl/Cmd+Shift+R). Splash must render, tracking-check must work, one full game round must complete.
-6. [ ] Confirm the "Offline · cached" pill is visible in top-left.
+6. [ ] Confirm the "Offline" pill is visible in top-left (network indicator; doesn't itself verify SW cache use).
 7. [ ] Toggle Network back online; pill disappears.
 
 ## Conference-day pre-flight
