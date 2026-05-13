@@ -5,6 +5,7 @@
   import { startFrameLoop } from '$lib/vision/frameLoop';
   import { game, paused } from '$lib/store.svelte';
   import { tick as gameTick, getBoardArea } from '$lib/game/tick';
+  import { pushEvents, resetEventLog } from '$lib/highlights/eventLog.svelte';
   import { normalizedPinchDistance, advancePinchState, type PinchState } from '$lib/gesture/pinch';
   import { getCursorPoint } from '$lib/gesture/cursor';
   import { captureSnip } from '$lib/game/snip';
@@ -129,8 +130,13 @@
         lastFrame = frame;
         lastGestures = gestures;
         if (!paused.value) {
-          const { state: next, events: _events } = gameTick(game.state, { type: 'tick', dtMs: dt }, gestures);
+          const { state: next, events } = gameTick(
+            game.state,
+            { type: 'tick', dtMs: dt, tMs: performance.now() },
+            gestures
+          );
           game.state = next;
+          pushEvents(events);
           reactAudio();
           maybeCaptureLockedSnips();
         }
@@ -423,6 +429,18 @@
       }
     }
   }
+
+  // Phase-transition hooks for highlights pipeline. Task 17 will extend this
+  // to start/stop the canvas recorder; for now it only resets the event log
+  // so the selector sees only events from the current match.
+  let prevPhaseForHighlights = '';
+  $effect(() => {
+    const currentPhase = game.state.phase;
+    if (prevPhaseForHighlights === 'countdown' && currentPhase === 'solve') {
+      resetEventLog(performance.now());
+    }
+    prevPhaseForHighlights = currentPhase;
+  });
 
   onMount(() => {
     window.addEventListener('keydown', onKeydown);
