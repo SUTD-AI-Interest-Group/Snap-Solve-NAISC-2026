@@ -4,11 +4,9 @@ import type { Hand } from './types';
 let landmarker: HandLandmarker | null = null;
 
 export async function initHandLandmarker(numHands = 4): Promise<HandLandmarker> {
-  const fileset = await FilesetResolver.forVisionTasks(
-    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm'
-  );
+  const fileset = await FilesetResolver.forVisionTasks('/mediapipe/wasm');
   landmarker = await HandLandmarker.createFromOptions(fileset, {
-    baseOptions: { modelAssetPath: '/models/hand_landmarker.task', delegate: 'GPU' },
+    baseOptions: { modelAssetPath: '/mediapipe/hand_landmarker.task', delegate: 'GPU' },
     runningMode: 'VIDEO',
     numHands,
     minHandDetectionConfidence: 0.5,
