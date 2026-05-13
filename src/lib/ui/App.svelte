@@ -5,7 +5,9 @@
   import { startFrameLoop } from '$lib/vision/frameLoop';
   import { game, paused } from '$lib/store.svelte';
   import { tick as gameTick, getBoardArea } from '$lib/game/tick';
-  import { pushEvents, resetEventLog } from '$lib/highlights/eventLog.svelte';
+  import { pushEvents, resetEventLog, eventLog } from '$lib/highlights/eventLog.svelte';
+  import { startRecording, type RecorderHandle } from '$lib/highlights/recorder';
+  import { setLastRecording, clearLastRecording } from '$lib/highlights/recordingStore.svelte';
   import { normalizedPinchDistance, advancePinchState, type PinchState } from '$lib/gesture/pinch';
   import { getCursorPoint } from '$lib/gesture/cursor';
   import { captureSnip } from '$lib/game/snip';
@@ -40,6 +42,7 @@
   let initializing = $state(true);
   let initToken = 0;
   let canvas: HTMLCanvasElement | undefined = $state();
+  let recorderHandle: RecorderHandle | null = null;
   let lastFrame: Frame | null = null;
   let lastGestures: GestureSnapshot | null = null;
   let snipCaptureInProgress = false;
@@ -430,15 +433,57 @@
     }
   }
 
-  // Phase-transition hooks for highlights pipeline. Task 17 will extend this
-  // to start/stop the canvas recorder; for now it only resets the event log
-  // so the selector sees only events from the current match.
+  // Phase-transition hooks for highlights pipeline.
   let prevPhaseForHighlights = '';
   $effect(() => {
     const currentPhase = game.state.phase;
-    if (prevPhaseForHighlights === 'countdown' && currentPhase === 'solve') {
-      resetEventLog(performance.now());
+
+    // countdown → solve: start recording the canvas + reset event log
+    // with the recorder's exact start time so event timestamps align.
+    if (
+      prevPhaseForHighlights === 'countdown' &&
+      currentPhase === 'solve' &&
+      canvas &&
+      !recorderHandle
+    ) {
+      try {
+        const handle = startRecording(canvas);
+        recorderHandle = handle;
+        resetEventLog(handle.startedAtMs);
+      } catch (e) {
+        console.warn('startRecording failed; highlights disabled this match', e);
+      }
     }
+
+    // solve → result: stop recorder, hand off recording + events + meta
+    // to the pipeline store. Errors here mean we have no highlights this
+    // match — degrade silently, don't crash the result screen.
+    if (prevPhaseForHighlights === 'solve' && currentPhase === 'result' && recorderHandle) {
+      const h = recorderHandle;
+      recorderHandle = null;
+      const s = game.state;
+      if (s.phase === 'result') {
+        const meta = {
+          p1Name: s.p1.name,
+          p2Name: s.p2.name,
+          winner: s.winner,
+          durationMs: s.durationMs
+        };
+        const startedAtMs = h.startedAtMs;
+        const events = eventLog.events.slice();
+        h.stop()
+          .then(({ blob }) => {
+            setLastRecording(blob, events, startedAtMs, meta);
+          })
+          .catch((e) => console.error('recorder.stop failed', e));
+      }
+    }
+
+    // Leaving result (rematch or new players): drop the recording.
+    if (prevPhaseForHighlights === 'result' && currentPhase !== 'result') {
+      clearLastRecording();
+    }
+
     prevPhaseForHighlights = currentPhase;
   });
 
@@ -449,6 +494,9 @@
       initToken++; // cancel any in-flight init
       stopLoop?.();
       cam?.stop();
+      recorderHandle?.stop().catch(() => {});
+      recorderHandle = null;
+      clearLastRecording();
       window.removeEventListener('keydown', onKeydown);
     };
   });
