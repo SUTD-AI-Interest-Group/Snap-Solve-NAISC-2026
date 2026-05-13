@@ -6,6 +6,7 @@
   import { animate, createTimeline, stagger } from 'animejs';
   import { onMount, onDestroy, tick } from 'svelte';
   import { recordWin } from '$lib/db/leaderboard';
+  import ShareCard from './ShareCard.svelte';
 
   let r = $derived(game.state.phase === 'result' ? game.state : null);
 
@@ -172,5 +173,9 @@
         {/if}
       </div>
     </div>
+  </div>
+
+  <div class="z-10 mt-4 w-full max-w-md px-6">
+    <ShareCard />
   </div>
 </section>
