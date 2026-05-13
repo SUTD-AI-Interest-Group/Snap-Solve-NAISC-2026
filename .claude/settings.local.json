@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "WebSearch",
-      "Bash(mkdir -p /Users/angks/projects/SUTD/SUTD_AIIG/NAISC_Mediapipe/docs/superpowers/specs)"
-    ]
-  }
-}
