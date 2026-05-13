@@ -1,5 +1,5 @@
 import type { Board } from '$lib/game/board';
-import type { Rect, Point } from '$lib/vision/types';
+import type { Rect } from '$lib/vision/types';
 
 export function drawBoard(
   ctx: CanvasRenderingContext2D,

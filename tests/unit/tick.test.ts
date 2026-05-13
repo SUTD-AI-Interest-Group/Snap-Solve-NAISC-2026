@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { tick } from '../../src/lib/game/tick';
-import { initialState, EMPTY_GESTURES, type GameState, type GestureSnapshot, type HandGesture } from '../../src/lib/game/state';
+import { initialState, EMPTY_GESTURES, type GameState, type GestureSnapshot } from '../../src/lib/game/state';
 import { makeSolvedBoard, swap as bSwap } from '../../src/lib/game/board';
 
 function bothHands(p1xL: number, p1xR: number, p2xL: number, p2xR: number, pinch: 'idle' | 'pinching' | 'holding' = 'idle'): GestureSnapshot {
