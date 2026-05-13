@@ -11,32 +11,16 @@
     <meta name="theme-color" content="#221b16" />
     <title>Snap &amp; Solve</title>
     <script>
-      // Kill any stale service worker (and its caches) on this origin —
-      // common in dev when another SvelteKit/PWA project has run on
-      // localhost:5173 and left a workbox SW behind that intercepts every
-      // fetch with a CacheFirst strategy.
-      (function () {
-        if (!('serviceWorker' in navigator)) return;
-        navigator.serviceWorker.getRegistrations().then(function (regs) {
-          var hadController = !!navigator.serviceWorker.controller;
-          if (regs.length === 0 && !hadController) return;
-          Promise.all(regs.map(function (r) { return r.unregister(); }))
-            .then(function () {
-              if ('caches' in window) {
-                return caches.keys().then(function (keys) {
-                  return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-                });
-              }
-            })
-            .then(function () {
-              // If this page load was being intercepted, escape with one reload.
-              if (hadController && !sessionStorage.getItem('sw-killed')) {
-                sessionStorage.setItem('sw-killed', '1');
-                window.location.reload();
-              }
-            });
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          // Skip registration in local dev so HMR isn't intercepted.
+          var host = window.location.hostname;
+          if (host === 'localhost' || host === '127.0.0.1') return;
+          navigator.serviceWorker.register('/service-worker.js').catch(function (e) {
+            console.warn('SW registration failed:', e);
+          });
         });
-      })();
+      }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
