@@ -19,7 +19,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@phosphor-icons/core": "^2.1.1",
-    "@sveltejs/adapter-auto": "^3.2.5",
+    "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.8.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/vite": "^4.3.0",
