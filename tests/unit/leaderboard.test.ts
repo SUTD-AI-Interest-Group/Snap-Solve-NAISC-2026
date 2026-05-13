@@ -1,5 +1,8 @@
 import 'fake-indexeddb/auto';
-import FDBFactory from 'fake-indexeddb/lib/FDBFactory';
+// fake-indexeddb/lib/FDBFactory has no `types` in the exports map; use the
+// top-level package (which does have types) and cast to access the class.
+import fakeIndexedDB from 'fake-indexeddb';
+const FDBFactory = (fakeIndexedDB as any).constructor as new () => IDBFactory;
 import { beforeEach, describe, expect, it } from 'vitest';
 import { recordWin, getTopScores, clearLeaderboard, _resetForTests } from '../../src/lib/db/leaderboard';
 

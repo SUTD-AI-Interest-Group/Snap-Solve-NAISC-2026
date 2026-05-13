@@ -203,7 +203,7 @@
                 <span class="font-medium text-black/80">{score.name}</span>
               </div>
               <span class="font-mono text-black/60 font-medium">
-                {(score.timeMs / 1000).toFixed(2)}s
+                {(score.bestTimeMs / 1000).toFixed(2)}s
               </span>
             </div>
           {/each}

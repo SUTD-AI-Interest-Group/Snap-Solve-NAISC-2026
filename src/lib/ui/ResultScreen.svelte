@@ -5,7 +5,7 @@
   import { EMPTY_GESTURES } from '$lib/game/state';
   import { animate, createTimeline, stagger } from 'animejs';
   import { onMount, tick } from 'svelte';
-  import { saveScore } from '$lib/db/leaderboard';
+  import { recordWin } from '$lib/db/leaderboard';
 
   let r = $derived(game.state.phase === 'result' ? game.state : null);
 
@@ -24,7 +24,7 @@
 
   let titleEl: HTMLHeadingElement | undefined = $state();
   let confettiEl: HTMLDivElement | undefined = $state();
-  let newScoreId = $state<number | null>(null);
+  let highlightRank = $state<number | null>(null);
 
   onMount(() => {
     if (titleEl) animate(titleEl, { scale: [0.4, 1], opacity: [0, 1], duration: 700, ease: 'outBack' });
@@ -43,15 +43,20 @@
 
     // Save score and show leaderboard
     (async () => {
+      let newRank: number | null = null;
+      let didImprove = false;
       try {
-        if (r && r.winner !== 'draw' && r.durationMs) {
+        if (r && r.winner !== 'draw' && r.durationMs > 0) {
           const winnerName = r.winner === 'p1' ? r.p1.name : r.p2.name;
-          newScoreId = await saveScore(winnerName, r.durationMs);
+          const result = await recordWin(winnerName, r.durationMs);
+          didImprove = result.improved;
+          newRank = result.rank;
         }
       } catch (e) {
         console.error('Failed to save score', e);
       }
-      
+      highlightRank = didImprove ? newRank : null;
+
       await refreshLeaderboard();
       await tick();
       
@@ -103,16 +108,16 @@
       <div class="flex flex-col gap-2">
         {#each leaderboard.scores as score, i}
           <div
-            class="flex items-center justify-between px-3 py-2 rounded-lg {score.id === newScoreId ? 'new-score-row border border-white/30' : ''}"
+            class="flex items-center justify-between px-3 py-2 rounded-lg {(i + 1) === highlightRank ? 'new-score-row border border-white/30' : ''}"
             data-lb-row
             style="opacity: 0;"
           >
             <div class="flex items-center gap-3">
               <span class="font-mono text-sm opacity-50 w-4 text-right">{i + 1}</span>
-              <span class="font-medium {score.id === newScoreId ? 'text-white' : 'text-white/90'}">{score.name}</span>
+              <span class="font-medium {(i + 1) === highlightRank ? 'text-white' : 'text-white/90'}">{score.name}</span>
             </div>
-            <span class="font-mono {score.id === newScoreId ? 'text-[var(--color-primary)] font-bold' : 'text-white/70'}">
-              {(score.timeMs / 1000).toFixed(2)}s
+            <span class="font-mono {(i + 1) === highlightRank ? 'text-[var(--color-primary)] font-bold' : 'text-white/70'}">
+              {(score.bestTimeMs / 1000).toFixed(2)}s
             </span>
           </div>
         {/each}
