@@ -27,14 +27,16 @@ npm run preview  # http://localhost:4173
 
 ```bash
 npm test         # vitest unit tests for pure logic
-npm run check    # svelte-check type check
+npm run check    # svelte-kit sync (regenerates types) + svelte-check type check
 npm run lint     # prettier --check + eslint
 npm run format   # prettier --write
 ```
 
 ## Offline support
 
-After the first online visit, a service worker caches everything the game needs — app shell, MediaPipe WASM, hand-tracking model, audio — so subsequent loads work fully offline. Verify with the "Offline boot" checklist in `docs/smoke-test.md` before the conference. The "Offline · cached" pill in the top-left of the screen confirms the SW is serving cached assets.
+After the first online visit, a service worker caches everything the game needs — app shell, MediaPipe WASM, hand-tracking model, audio — so subsequent loads work fully offline. Verify with the "Offline boot" checklist in `docs/smoke-test.md` before the conference.
+
+The "Offline" pill in the top-left of the screen is a network-status indicator (driven by `navigator.onLine`); it confirms the browser thinks it has no connectivity but doesn't itself verify that the SW is serving requests. Use DevTools → Application → Service Workers (and Cache Storage) for that.
 
 ## Project structure
 

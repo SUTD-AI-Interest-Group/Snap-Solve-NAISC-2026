@@ -23,6 +23,6 @@
     role="status"
     aria-live="polite"
   >
-    Offline · cached
+    Offline
   </div>
 {/if}
