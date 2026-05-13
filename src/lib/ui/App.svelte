@@ -129,7 +129,8 @@
         lastFrame = frame;
         lastGestures = gestures;
         if (!paused.value) {
-          game.state = gameTick(game.state, { type: 'tick', dtMs: dt }, gestures);
+          const { state: next, events: _events } = gameTick(game.state, { type: 'tick', dtMs: dt }, gestures);
+          game.state = next;
           reactAudio();
           maybeCaptureLockedSnips();
         }
@@ -248,7 +249,7 @@
             right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
           }
         }
-      );
+      ).state;
     } catch (e) {
       console.error('snip capture failed', e);
     } finally {

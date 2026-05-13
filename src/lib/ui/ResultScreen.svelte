@@ -10,10 +10,10 @@
   let r = $derived(game.state.phase === 'result' ? game.state : null);
 
   function rematch() {
-    game.state = gameTick(game.state, { type: 'rematch' }, EMPTY_GESTURES);
+    game.state = gameTick(game.state, { type: 'rematch' }, EMPTY_GESTURES).state;
   }
   function newPlayers() {
-    game.state = gameTick(game.state, { type: 'newPlayers' }, EMPTY_GESTURES);
+    game.state = gameTick(game.state, { type: 'newPlayers' }, EMPTY_GESTURES).state;
   }
 
   const winnerLabel = $derived(

@@ -18,7 +18,7 @@
       game.state,
       { type: 'nicknamesSubmitted', p1Name: p1.trim(), p2Name: p2.trim() },
       EMPTY_GESTURES
-    );
+    ).state;
   }
 
   function onKeydown(e: KeyboardEvent) {
