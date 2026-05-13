@@ -54,3 +54,5 @@ docs/superpowers/
 
 # Copied at postinstall — see scripts/copy-gif-worker.mjs
 static/gifjs/gif.worker.js
+supabase/.env.local
+supabase/.branches/
