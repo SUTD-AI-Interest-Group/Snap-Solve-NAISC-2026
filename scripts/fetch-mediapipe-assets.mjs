@@ -37,7 +37,9 @@ const existingMarker = existsSync(markerPath) ? readFileSync(markerPath, 'utf8')
 const versionChanged = existingMarker !== version;
 
 if (versionChanged && existingMarker) {
-  console.log(`◆ pinned MediaPipe version changed: ${existingMarker} → ${version} — refreshing assets`);
+  console.log(
+    `◆ pinned MediaPipe version changed: ${existingMarker} → ${version} — refreshing assets`
+  );
 }
 
 async function download(url, dest) {
