@@ -22,11 +22,16 @@ export default [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
       ],
-      'no-unused-vars': 'off',
-      // TypeScript handles undefined-symbol detection; disable to avoid flagging
-      // DOM type names (CanvasImageSource, etc.) which are types not runtime.
-      'no-undef': 'off'
+      'no-unused-vars': 'off'
     }
+  },
+  {
+    // TypeScript's own checker covers undefined symbols accurately and
+    // recognises DOM type names (CanvasImageSource, HTMLDivElement, ...)
+    // that ESLint's `no-undef` would falsely flag. Plain .js / .mjs files
+    // still benefit from the rule, so keep it enabled there.
+    files: ['**/*.ts'],
+    rules: { 'no-undef': 'off' }
   },
   {
     files: ['**/*.svelte'],
