@@ -80,11 +80,14 @@ To replace with new tracks, drop a new file at the same path. The interface look
 
 ## Deploy
 
-`@sveltejs/adapter-auto` handles Vercel automatically. Push the repo to GitHub, import in Vercel, done.
+The game itself is a fully static SvelteKit build (`@sveltejs/adapter-static`) — it deploys to Netlify with no server-side code. Server-side concerns (highlight reel landing page + visit tracking) live in a Supabase Edge Function. Push to GitHub, connect the repo on Netlify, set the env vars from `.env.example`, done.
+
+Highlights also depend on a Supabase project (Postgres + Storage + the `highlights` Edge Function). See `supabase/migrations/` and `supabase/functions/` for the schema and function code; `supabase db push` + `supabase functions deploy highlights` does the setup.
 
 ## Acknowledgements
 
 - Hand tracking: [@mediapipe/tasks-vision](https://github.com/google-ai-edge/mediapipe) — Apache 2.0. WASM and `hand_landmarker.task` model are self-hosted under `static/mediapipe/` for offline boot.
+- Highlights: [gif.js](https://github.com/jnordberg/gif.js) (MIT), [qrcode](https://github.com/soldair/node-qrcode) (MIT), [Supabase](https://supabase.com/) (Apache-2.0 for the SDK).
 - See "Audio" section for SFX/music attribution.
 
 ## Backlog (KIV)
@@ -95,4 +98,3 @@ Tracked here, not blocking the conference demo:
 - Snip preview on the result screen (show the captured snip next to the final board).
 - Move tunable constants into `src/lib/config.ts`.
 - Admin keyboard shortcut to skip phases for booth troubleshooting.
-- Replay of completed games.
