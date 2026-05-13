@@ -10,7 +10,7 @@
   import handPalmSvg from '$lib/icons/hand-palm.svg?raw';
 
   function advance() {
-    game.state = gameTick(game.state, { type: 'advanceFromSplash' }, EMPTY_GESTURES);
+    game.state = gameTick(game.state, { type: 'advanceFromSplash' }, EMPTY_GESTURES).state;
   }
 
   function prefersReducedMotion(): boolean {

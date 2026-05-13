@@ -48,3 +48,16 @@ Run before each commit-to-main and before the conference. Browser: Chrome (lates
 - [ ] Pre-grant Chrome camera permission for both `localhost:4173` and the Vercel URL.
 - [ ] Bring a backup USB webcam.
 - [ ] Mute button works; verify booth-acceptable volume on lobby + gameplay music.
+
+## Highlights
+
+Requires `.env` env vars set + Supabase project provisioned + Edge Function deployed.
+
+1. [ ] Play one full match through to the result screen.
+2. [ ] Share card appears under the leaderboard with the "Cooking up your highlights…" state for ~10 seconds.
+3. [ ] When ready, the QR code is visible alongside a 3-thumbnail strip.
+4. [ ] Scan the QR on a phone → landing page loads → shows the GIFs + download buttons.
+5. [ ] Tap Download on one GIF → file saves with name `snap-solve-<kind>.gif`.
+6. [ ] In Supabase Dashboard → Tables → `games`, the latest row's `visits` column is `1` after the first scan, `2` after a second visit, etc.
+7. [ ] Play 4+ more games. After enough games (counting up to 3 GIFs each), the original first-game's GIFs return 404 (capped at 10).
+8. [ ] Turn off Wi-Fi mid-match, finish the game → share card shows the error fallback with download buttons that work without network.

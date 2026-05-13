@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fetch-mediapipe": "node scripts/fetch-mediapipe-assets.mjs",
-    "postinstall": "node scripts/fetch-mediapipe-assets.mjs",
+    "copy-gif-worker": "node scripts/copy-gif-worker.mjs",
+    "postinstall": "node scripts/fetch-mediapipe-assets.mjs && node scripts/copy-gif-worker.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "prettier --check . && eslint src tests"
@@ -19,11 +20,12 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@phosphor-icons/core": "^2.1.1",
-    "@sveltejs/adapter-auto": "^3.2.5",
+    "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.8.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/vite": "^4.3.0",
     "@types/animejs": "^3.1.13",
+    "@types/qrcode": "^1.5.6",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
     "eslint": "^10.3.0",
@@ -44,9 +46,12 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.35",
+    "@supabase/supabase-js": "^2.105.4",
     "animejs": "^4.4.1",
     "bits-ui": "^2.18.1",
     "clsx": "^2.1.1",
+    "gif.js": "^0.2.0",
+    "qrcode": "^1.5.4",
     "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.2.2"
   }

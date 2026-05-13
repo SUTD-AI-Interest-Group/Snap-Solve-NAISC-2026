@@ -5,6 +5,9 @@
   import { startFrameLoop } from '$lib/vision/frameLoop';
   import { game, paused } from '$lib/store.svelte';
   import { tick as gameTick, getBoardArea } from '$lib/game/tick';
+  import { pushEvents, resetEventLog, eventLog } from '$lib/highlights/eventLog.svelte';
+  import { startRecording, type RecorderHandle } from '$lib/highlights/recorder';
+  import { setLastRecording, clearLastRecording } from '$lib/highlights/recordingStore.svelte';
   import { normalizedPinchDistance, advancePinchState, type PinchState } from '$lib/gesture/pinch';
   import { getCursorPoint } from '$lib/gesture/cursor';
   import { captureSnip } from '$lib/game/snip';
@@ -39,6 +42,7 @@
   let initializing = $state(true);
   let initToken = 0;
   let canvas: HTMLCanvasElement | undefined = $state();
+  let recorderHandle: RecorderHandle | null = null;
   let lastFrame: Frame | null = null;
   let lastGestures: GestureSnapshot | null = null;
   let snipCaptureInProgress = false;
@@ -129,7 +133,13 @@
         lastFrame = frame;
         lastGestures = gestures;
         if (!paused.value) {
-          game.state = gameTick(game.state, { type: 'tick', dtMs: dt }, gestures);
+          const { state: next, events } = gameTick(
+            game.state,
+            { type: 'tick', dtMs: dt, tMs: performance.now() },
+            gestures
+          );
+          game.state = next;
+          pushEvents(events);
           reactAudio();
           maybeCaptureLockedSnips();
         }
@@ -248,7 +258,7 @@
             right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
           }
         }
-      );
+      ).state;
     } catch (e) {
       console.error('snip capture failed', e);
     } finally {
@@ -423,6 +433,68 @@
     }
   }
 
+  // Phase-transition hooks for highlights pipeline.
+  let prevPhaseForHighlights = '';
+  $effect(() => {
+    const currentPhase = game.state.phase;
+
+    // countdown → solve: start recording the canvas + reset event log
+    // with the recorder's exact start time so event timestamps align.
+    if (
+      prevPhaseForHighlights === 'countdown' &&
+      currentPhase === 'solve' &&
+      canvas &&
+      !recorderHandle
+    ) {
+      // Reset the event log every match, even if the recorder fails to
+      // start. Otherwise pushEvents would keep accumulating into the
+      // previous match's events forever (selector would still pick the
+      // first match's win — and memory would grow unbounded).
+      resetEventLog(performance.now());
+      try {
+        const handle = startRecording(canvas);
+        recorderHandle = handle;
+        // Re-align the event-log start to the recorder's exact start time
+        // when recording is active; this is a tiny adjustment but matters
+        // for sub-frame precision in clipper seek targets.
+        resetEventLog(handle.startedAtMs);
+      } catch (e) {
+        console.warn('startRecording failed; highlights disabled this match', e);
+      }
+    }
+
+    // solve → result: stop recorder, hand off recording + events + meta
+    // to the pipeline store. Errors here mean we have no highlights this
+    // match — degrade silently, don't crash the result screen.
+    if (prevPhaseForHighlights === 'solve' && currentPhase === 'result' && recorderHandle) {
+      const h = recorderHandle;
+      recorderHandle = null;
+      const s = game.state;
+      if (s.phase === 'result') {
+        const meta = {
+          p1Name: s.p1.name,
+          p2Name: s.p2.name,
+          winner: s.winner,
+          durationMs: s.durationMs
+        };
+        const startedAtMs = h.startedAtMs;
+        const events = eventLog.events.slice();
+        h.stop()
+          .then(({ blob }) => {
+            setLastRecording(blob, events, startedAtMs, meta);
+          })
+          .catch((e) => console.error('recorder.stop failed', e));
+      }
+    }
+
+    // Leaving result (rematch or new players): drop the recording.
+    if (prevPhaseForHighlights === 'result' && currentPhase !== 'result') {
+      clearLastRecording();
+    }
+
+    prevPhaseForHighlights = currentPhase;
+  });
+
   onMount(() => {
     window.addEventListener('keydown', onKeydown);
     init();
@@ -430,6 +502,9 @@
       initToken++; // cancel any in-flight init
       stopLoop?.();
       cam?.stop();
+      recorderHandle?.stop().catch(() => {});
+      recorderHandle = null;
+      clearLastRecording();
       window.removeEventListener('keydown', onKeydown);
     };
   });

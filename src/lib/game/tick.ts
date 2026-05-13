@@ -3,6 +3,7 @@ import type {
   GameEvent,
   GestureSnapshot,
   HandGesture,
+  HighlightEvent,
   SnipState,
   Winner
 } from './state';
@@ -11,8 +12,10 @@ import type { Board } from './board';
 import { scrambleSwap, swap as boardSwap } from './board';
 import { rectFromCorners, clampToPlayerHalf, hasMinSize } from './snip';
 
+export type TickResult = { state: GameState; events: HighlightEvent[] };
+
 const READY_HOLD_TARGET_MS = 2000;
-const AUTO_COUNTDOWN_MS = 3000;
+const BOTH_STABLE_DWELL_MS = 1000;
 const SNIP_HOLD_MS = 1500;
 const SOLVE_DURATION_MS = 5 * 60 * 1000;
 
@@ -68,11 +71,18 @@ function boardCellAt(local: Point): number {
   return row * 3 + col;
 }
 
-function applyPlayerHold(
+type SwapSignal = {
+  from: number;
+  to: number;
+  correctBefore: number;
+  correctAfter: number;
+};
+
+function applyPlayerHoldWithSignal(
   board: Board,
   player: PlayerId,
   hands: { left: HandGesture; right: HandGesture }
-): Board {
+): { board: Board; swap: SwapSignal | null } {
   const active =
     hands.left.present && hands.left.pinch === 'holding'
       ? hands.left
@@ -84,57 +94,75 @@ function applyPlayerHold(
     const local = cursorToBoardLocal(active.cursor, player);
     const cell = boardCellAt(local);
     if (board.heldBy === player) {
-      return { ...board, heldCursor: local };
+      return { board: { ...board, heldCursor: local }, swap: null };
     }
     if (cell >= 0) {
-      return { ...board, heldBy: player, heldPieceCell: cell, heldCursor: local };
+      return {
+        board: { ...board, heldBy: player, heldPieceCell: cell, heldCursor: local },
+        swap: null
+      };
     }
-    return board;
+    return { board, swap: null };
   }
 
   if (board.heldBy === player) {
     const origin = board.heldPieceCell;
     const dropCell = boardCellAt(board.heldCursor ?? { x: -1, y: -1 });
     const valid = dropCell >= 0 && dropCell !== origin;
-    if (valid) return boardSwap(board, origin, dropCell);
-    return { ...board, heldBy: null, heldPieceCell: -1, heldCursor: null };
+    if (valid) {
+      const correctBefore = board.correctCount;
+      const nextBoard = boardSwap(board, origin, dropCell);
+      return {
+        board: nextBoard,
+        swap: { from: origin, to: dropCell, correctBefore, correctAfter: nextBoard.correctCount }
+      };
+    }
+    return { board: { ...board, heldBy: null, heldPieceCell: -1, heldCursor: null }, swap: null };
   }
-  return board;
+  return { board, swap: null };
 }
 
-export function tick(state: GameState, event: GameEvent, gestures: GestureSnapshot): GameState {
-  if (event.type === 'newPlayers') return { phase: 'nicknames', p1Name: '', p2Name: '' };
+export function tick(state: GameState, event: GameEvent, gestures: GestureSnapshot): TickResult {
+  if (event.type === 'newPlayers')
+    return { state: { phase: 'nicknames', p1Name: '', p2Name: '' }, events: [] };
   if (event.type === 'rematch' && state.phase === 'result') {
     return {
-      phase: 'trackingCheck',
-      p1Name: state.p1.name,
-      p2Name: state.p2.name,
-      p1Ready: 0,
-      p2Ready: 0,
-      autoCountdownMs: null
+      state: {
+        phase: 'trackingCheck',
+        p1Name: state.p1.name,
+        p2Name: state.p2.name,
+        p1Ready: 0,
+        p2Ready: 0,
+        bothStableMs: null
+      },
+      events: []
     };
   }
 
   switch (state.phase) {
     case 'splash':
-      if (event.type === 'advanceFromSplash') return { phase: 'nicknames', p1Name: '', p2Name: '' };
-      return state;
+      if (event.type === 'advanceFromSplash')
+        return { state: { phase: 'nicknames', p1Name: '', p2Name: '' }, events: [] };
+      return { state, events: [] };
 
     case 'nicknames':
       if (event.type === 'nicknamesSubmitted') {
         return {
-          phase: 'trackingCheck',
-          p1Name: event.p1Name,
-          p2Name: event.p2Name,
-          p1Ready: 0,
-          p2Ready: 0,
-          autoCountdownMs: null
+          state: {
+            phase: 'trackingCheck',
+            p1Name: event.p1Name,
+            p2Name: event.p2Name,
+            p1Ready: 0,
+            p2Ready: 0,
+            bothStableMs: null
+          },
+          events: []
         };
       }
-      return state;
+      return { state, events: [] };
 
     case 'trackingCheck': {
-      if (event.type !== 'tick') return state;
+      if (event.type !== 'tick') return { state, events: [] };
       const dt = event.dtMs;
       const p1Ok = bothHandsPresent(gestures.p1);
       const p2Ok = bothHandsPresent(gestures.p2);
@@ -143,78 +171,144 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
       const bothFull = p1Ready >= READY_HOLD_TARGET_MS && p2Ready >= READY_HOLD_TARGET_MS;
 
       if (bothFull) {
-        const remaining = (state.autoCountdownMs ?? AUTO_COUNTDOWN_MS) - dt;
-        if (remaining <= 0) {
+        const stable = (state.bothStableMs ?? 0) + dt;
+        if (stable >= BOTH_STABLE_DWELL_MS) {
           return {
-            phase: 'snip',
-            p1Name: state.p1Name,
-            p2Name: state.p2Name,
-            p1: { kind: 'idle' },
-            p2: { kind: 'idle' }
+            state: {
+              phase: 'snip',
+              p1Name: state.p1Name,
+              p2Name: state.p2Name,
+              p1: { kind: 'idle' },
+              p2: { kind: 'idle' }
+            },
+            events: []
           };
         }
-        return { ...state, p1Ready, p2Ready, autoCountdownMs: remaining };
+        return { state: { ...state, p1Ready, p2Ready, bothStableMs: stable }, events: [] };
       }
-      return { ...state, p1Ready, p2Ready, autoCountdownMs: null };
+      return { state: { ...state, p1Ready, p2Ready, bothStableMs: null }, events: [] };
     }
 
     case 'snip': {
       if (event.type === 'snipsCaptured') {
         return {
-          phase: 'countdown',
-          remainingMs: 5000,
-          p1: event.p1Setup,
-          p2: event.p2Setup
+          state: {
+            phase: 'countdown',
+            remainingMs: 5000,
+            p1: event.p1Setup,
+            p2: event.p2Setup
+          },
+          events: []
         };
       }
-      if (event.type !== 'tick') return state;
+      if (event.type !== 'tick') return { state, events: [] };
       const dt = event.dtMs;
       const p1 = nextSnipState(state.p1, gestures.p1, 'p1', dt);
       const p2 = nextSnipState(state.p2, gestures.p2, 'p2', dt);
-      return { ...state, p1, p2 };
+      return { state: { ...state, p1, p2 }, events: [] };
     }
 
     case 'countdown': {
-      if (event.type !== 'tick') return state;
+      if (event.type !== 'tick') return { state, events: [] };
       const remaining = state.remainingMs - event.dtMs;
-      if (remaining > 0) return { ...state, remainingMs: remaining };
+      if (remaining > 0) return { state: { ...state, remainingMs: remaining }, events: [] };
       const p1Board = scrambleSwap();
       const p2Board = scrambleSwap();
       return {
-        phase: 'solve',
-        remainingMs: SOLVE_DURATION_MS,
-        startMs: SOLVE_DURATION_MS,
-        p1: { ...state.p1, board: p1Board },
-        p2: { ...state.p2, board: p2Board }
+        state: {
+          phase: 'solve',
+          remainingMs: SOLVE_DURATION_MS,
+          startMs: SOLVE_DURATION_MS,
+          p1: { ...state.p1, board: p1Board },
+          p2: { ...state.p2, board: p2Board }
+        },
+        events: []
       };
     }
 
     case 'solve': {
-      if (event.type !== 'tick') return state;
+      if (event.type !== 'tick') return { state, events: [] };
       const dt = event.dtMs;
-      const p1Board = applyPlayerHold(state.p1.board, 'p1', gestures.p1);
-      const p2Board = applyPlayerHold(state.p2.board, 'p2', gestures.p2);
+      const nowMs = event.tMs ?? 0;
+      const events: HighlightEvent[] = [];
+
+      // Compute previous lead sign before applying holds
+      const prevSign = Math.sign(state.p1.board.correctCount - state.p2.board.correctCount);
+
+      const p1Result = applyPlayerHoldWithSignal(state.p1.board, 'p1', gestures.p1);
+      const p2Result = applyPlayerHoldWithSignal(state.p2.board, 'p2', gestures.p2);
+      const p1Board = p1Result.board;
+      const p2Board = p2Result.board;
       const p1 = { ...state.p1, board: p1Board };
       const p2 = { ...state.p2, board: p2Board };
 
+      // Emit swap events
+      if (p1Result.swap) {
+        const sig = p1Result.swap;
+        events.push({
+          kind: 'swap',
+          player: 'p1',
+          from: sig.from,
+          to: sig.to,
+          correctBefore: sig.correctBefore,
+          correctAfter: sig.correctAfter,
+          tMs: nowMs
+        });
+      }
+      if (p2Result.swap) {
+        const sig = p2Result.swap;
+        events.push({
+          kind: 'swap',
+          player: 'p2',
+          from: sig.from,
+          to: sig.to,
+          correctBefore: sig.correctBefore,
+          correctAfter: sig.correctAfter,
+          tMs: nowMs
+        });
+      }
+
+      // Lead-flip detection
+      const newSign = Math.sign(p1Board.correctCount - p2Board.correctCount);
+      if (prevSign !== 0 && newSign !== 0 && prevSign !== newSign) {
+        events.push({
+          kind: 'leadFlip',
+          leader: newSign > 0 ? 'p1' : 'p2',
+          p1Correct: p1Board.correctCount,
+          p2Correct: p2Board.correctCount,
+          tMs: nowMs
+        });
+      }
+
+      // Win detection
       const p1Won = p1Board.correctCount === 9;
       const p2Won = p2Board.correctCount === 9;
-      if (p1Won)
+      if (p1Won) {
+        events.push({ kind: 'win', player: 'p1', tMs: nowMs });
         return {
-          phase: 'result',
-          winner: 'p1',
-          durationMs: state.startMs - state.remainingMs,
-          p1,
-          p2
+          state: {
+            phase: 'result',
+            winner: 'p1',
+            durationMs: state.startMs - state.remainingMs,
+            p1,
+            p2
+          },
+          events
         };
-      if (p2Won)
+      }
+      if (p2Won) {
+        events.push({ kind: 'win', player: 'p2', tMs: nowMs });
         return {
-          phase: 'result',
-          winner: 'p2',
-          durationMs: state.startMs - state.remainingMs,
-          p1,
-          p2
+          state: {
+            phase: 'result',
+            winner: 'p2',
+            durationMs: state.startMs - state.remainingMs,
+            p1,
+            p2
+          },
+          events
         };
+      }
 
       const remaining = state.remainingMs - dt;
       if (remaining <= 0) {
@@ -224,12 +318,12 @@ export function tick(state: GameState, event: GameEvent, gestures: GestureSnapsh
             : p2Board.correctCount > p1Board.correctCount
               ? 'p2'
               : 'draw';
-        return { phase: 'result', winner, durationMs: state.startMs, p1, p2 };
+        return { state: { phase: 'result', winner, durationMs: state.startMs, p1, p2 }, events };
       }
-      return { ...state, remainingMs: remaining, p1, p2 };
+      return { state: { ...state, remainingMs: remaining, p1, p2 }, events };
     }
 
     case 'result':
-      return state;
+      return { state, events: [] };
   }
 }

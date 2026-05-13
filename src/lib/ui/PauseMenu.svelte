@@ -22,7 +22,7 @@
         p2Name,
         p1Ready: 0,
         p2Ready: 0,
-        autoCountdownMs: null
+        bothStableMs: null
       };
     } else if (s.phase === 'snip' || s.phase === 'trackingCheck') {
       const p1Name = (s as { p1Name?: string }).p1Name ?? '';
@@ -33,7 +33,7 @@
         p2Name,
         p1Ready: 0,
         p2Ready: 0,
-        autoCountdownMs: null
+        bothStableMs: null
       };
     } else {
       game.state = { phase: 'nicknames', p1Name: '', p2Name: '' };

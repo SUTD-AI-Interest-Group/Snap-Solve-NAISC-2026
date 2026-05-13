@@ -6,14 +6,15 @@
   import { animate, createTimeline, stagger } from 'animejs';
   import { onMount, onDestroy, tick } from 'svelte';
   import { recordWin } from '$lib/db/leaderboard';
+  import ShareCard from './ShareCard.svelte';
 
   let r = $derived(game.state.phase === 'result' ? game.state : null);
 
   function rematch() {
-    game.state = gameTick(game.state, { type: 'rematch' }, EMPTY_GESTURES);
+    game.state = gameTick(game.state, { type: 'rematch' }, EMPTY_GESTURES).state;
   }
   function newPlayers() {
-    game.state = gameTick(game.state, { type: 'newPlayers' }, EMPTY_GESTURES);
+    game.state = gameTick(game.state, { type: 'newPlayers' }, EMPTY_GESTURES).state;
   }
 
   const winnerLabel = $derived(
@@ -172,5 +173,9 @@
         {/if}
       </div>
     </div>
+  </div>
+
+  <div class="z-10 mt-4 w-full max-w-md px-6">
+    <ShareCard />
   </div>
 </section>

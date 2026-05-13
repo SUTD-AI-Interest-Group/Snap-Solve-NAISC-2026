@@ -1,4 +1,4 @@
-import type { Point, Rect } from '../vision/types';
+import type { PlayerId, Point, Rect } from '../vision/types';
 import type { Board } from './board';
 
 export type Winner = 'p1' | 'p2' | 'draw';
@@ -20,7 +20,7 @@ export type GameState =
       p2Name: string;
       p1Ready: number;
       p2Ready: number;
-      autoCountdownMs: number | null;
+      bothStableMs: number | null;
     }
   | { phase: 'snip'; p1Name: string; p2Name: string; p1: SnipState; p2: SnipState }
   | { phase: 'countdown'; remainingMs: number; p1: PlayerSetup; p2: PlayerSetup }
@@ -42,7 +42,7 @@ export type GameEvent =
   | { type: 'snipsCaptured'; p1Setup: PlayerSetup; p2Setup: PlayerSetup }
   | { type: 'rematch' }
   | { type: 'newPlayers' }
-  | { type: 'tick'; dtMs: number };
+  | { type: 'tick'; dtMs: number; tMs?: number };
 
 export type HandGesture = {
   present: boolean;
@@ -64,4 +64,34 @@ export const EMPTY_HAND: HandGesture = {
 export const EMPTY_GESTURES: GestureSnapshot = {
   p1: { left: EMPTY_HAND, right: EMPTY_HAND },
   p2: { left: EMPTY_HAND, right: EMPTY_HAND }
+};
+
+// ─── Highlights ──────────────────────────────────────────────────────
+// Events emitted by tick() during the solve phase, consumed by the
+// highlights selector after the game ends.
+
+export type HighlightEvent =
+  | {
+      kind: 'swap';
+      player: PlayerId;
+      from: number;
+      to: number;
+      correctBefore: number;
+      correctAfter: number;
+      tMs: number;
+    }
+  | { kind: 'win'; player: PlayerId; tMs: number }
+  | {
+      kind: 'leadFlip';
+      leader: PlayerId;
+      p1Correct: number;
+      p2Correct: number;
+      tMs: number;
+    };
+
+export type GameMeta = {
+  p1Name: string;
+  p2Name: string;
+  winner: Winner;
+  durationMs: number;
 };

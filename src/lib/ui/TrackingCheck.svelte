@@ -5,7 +5,6 @@
 
   let p1Ready = $derived(game.state.phase === 'trackingCheck' ? game.state.p1Ready : 0);
   let p2Ready = $derived(game.state.phase === 'trackingCheck' ? game.state.p2Ready : 0);
-  let auto = $derived(game.state.phase === 'trackingCheck' ? game.state.autoCountdownMs : null);
   let p1Name = $derived(game.state.phase === 'trackingCheck' ? game.state.p1Name : '');
   let p2Name = $derived(game.state.phase === 'trackingCheck' ? game.state.p2Name : '');
 </script>
@@ -52,13 +51,4 @@
       ></div>
     </div>
   </div>
-  {#if auto !== null}
-    <div class="absolute inset-0 flex items-center justify-center">
-      <div
-        class="font-display rounded-3xl bg-black/70 px-16 py-8 text-[10rem] leading-none drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]"
-      >
-        {Math.ceil(auto / 1000)}
-      </div>
-    </div>
-  {/if}
 </div>
