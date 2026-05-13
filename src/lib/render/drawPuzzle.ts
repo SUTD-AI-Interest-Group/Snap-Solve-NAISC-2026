@@ -64,10 +64,15 @@ export function drawBoard(
       ctx.strokeRect(x - 2, y - 2, cellW + 4, cellH + 4);
       ctx.restore();
     }
-    drawPiece(ctx, pieces[id], { x, y, w: cellW, h: cellH }, {
-      isCorrect: id === i,
-      highlightColor
-    });
+    drawPiece(
+      ctx,
+      pieces[id],
+      { x, y, w: cellW, h: cellH },
+      {
+        isCorrect: id === i,
+        highlightColor
+      }
+    );
   }
 
   if (board.heldBy && board.heldCursor) {
@@ -78,11 +83,16 @@ export function drawBoard(
       ctx.save();
       ctx.shadowColor = highlightColor;
       ctx.shadowBlur = 30;
-      drawPiece(ctx, pieces[id], { x: px, y: py, w: cellW * 1.08, h: cellH * 1.08 }, {
-        isCorrect: false,
-        highlightColor,
-        lifted: true
-      });
+      drawPiece(
+        ctx,
+        pieces[id],
+        { x: px, y: py, w: cellW * 1.08, h: cellH * 1.08 },
+        {
+          isCorrect: false,
+          highlightColor,
+          lifted: true
+        }
+      );
       ctx.restore();
     }
   }

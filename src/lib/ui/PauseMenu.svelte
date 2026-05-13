@@ -48,10 +48,17 @@
   }
 </script>
 
-<section class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center gap-8 z-50 pointer-events-auto">
-  <h2 class="font-display text-7xl md:text-8xl tracking-tight drop-shadow-[0_6px_0_rgba(0,0,0,0.4)]" style="color: var(--color-accent);">Paused</h2>
-  <p class="font-sans text-lg md:text-xl opacity-75 font-medium">Press ESC to resume</p>
-  <div class="flex flex-col md:flex-row gap-4 mt-4">
+<section
+  class="pointer-events-auto absolute inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-black/85 backdrop-blur-sm"
+>
+  <h2
+    class="font-display text-7xl tracking-tight drop-shadow-[0_6px_0_rgba(0,0,0,0.4)] md:text-8xl"
+    style="color: var(--color-accent);"
+  >
+    Paused
+  </h2>
+  <p class="font-sans text-lg font-medium opacity-75 md:text-xl">Press ESC to resume</p>
+  <div class="mt-4 flex flex-col gap-4 md:flex-row">
     <Button size="lg" onclick={resume}>Resume</Button>
     <Button size="lg" variant="outline" onclick={restart}>Restart match</Button>
     <Button size="lg" variant="outline" onclick={quit}>Main menu</Button>

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { normalizedPinchDistance, advancePinchState, type PinchState } from '../../src/lib/gesture/pinch';
+import {
+  normalizedPinchDistance,
+  advancePinchState,
+  type PinchState
+} from '../../src/lib/gesture/pinch';
 import type { Hand } from '../../src/lib/vision/types';
 
 function hand(

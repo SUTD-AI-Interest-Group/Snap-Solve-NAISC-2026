@@ -1,12 +1,29 @@
 import { describe, it, expect } from 'vitest';
 import { tick } from '../../src/lib/game/tick';
-import { initialState, EMPTY_GESTURES, type GameState, type GestureSnapshot } from '../../src/lib/game/state';
+import {
+  initialState,
+  EMPTY_GESTURES,
+  type GameState,
+  type GestureSnapshot
+} from '../../src/lib/game/state';
 import { makeSolvedBoard, swap as bSwap } from '../../src/lib/game/board';
 
-function bothHands(p1xL: number, p1xR: number, p2xL: number, p2xR: number, pinch: 'idle' | 'pinching' | 'holding' = 'idle'): GestureSnapshot {
+function bothHands(
+  p1xL: number,
+  p1xR: number,
+  p2xL: number,
+  p2xR: number,
+  pinch: 'idle' | 'pinching' | 'holding' = 'idle'
+): GestureSnapshot {
   return {
-    p1: { left: { present: true, pinch, cursor: { x: p1xL, y: 0.5 } }, right: { present: true, pinch, cursor: { x: p1xR, y: 0.5 } } },
-    p2: { left: { present: true, pinch, cursor: { x: p2xL, y: 0.5 } }, right: { present: true, pinch, cursor: { x: p2xR, y: 0.5 } } }
+    p1: {
+      left: { present: true, pinch, cursor: { x: p1xL, y: 0.5 } },
+      right: { present: true, pinch, cursor: { x: p1xR, y: 0.5 } }
+    },
+    p2: {
+      left: { present: true, pinch, cursor: { x: p2xL, y: 0.5 } },
+      right: { present: true, pinch, cursor: { x: p2xR, y: 0.5 } }
+    }
   };
 }
 
@@ -37,7 +54,14 @@ describe('tick - nicknames', () => {
 describe('tick - trackingCheck readiness', () => {
   it('accumulates readiness when both hands present', () => {
     const g = bothHands(0.2, 0.3, 0.7, 0.8);
-    const s0: GameState = { phase: 'trackingCheck', p1Name: 'A', p2Name: 'B', p1Ready: 0, p2Ready: 0, autoCountdownMs: null };
+    const s0: GameState = {
+      phase: 'trackingCheck',
+      p1Name: 'A',
+      p2Name: 'B',
+      p1Ready: 0,
+      p2Ready: 0,
+      autoCountdownMs: null
+    };
     const s = tick(s0, { type: 'tick', dtMs: 500 }, g);
     expect(s.phase).toBe('trackingCheck');
     if (s.phase === 'trackingCheck') {
@@ -47,7 +71,14 @@ describe('tick - trackingCheck readiness', () => {
   });
 
   it('resets readiness when hands disappear', () => {
-    const s0: GameState = { phase: 'trackingCheck', p1Name: 'A', p2Name: 'B', p1Ready: 1000, p2Ready: 500, autoCountdownMs: null };
+    const s0: GameState = {
+      phase: 'trackingCheck',
+      p1Name: 'A',
+      p2Name: 'B',
+      p1Ready: 1000,
+      p2Ready: 500,
+      autoCountdownMs: null
+    };
     const s = tick(s0, { type: 'tick', dtMs: 16 }, EMPTY_GESTURES);
     if (s.phase === 'trackingCheck') {
       expect(s.p1Ready).toBe(0);
@@ -57,7 +88,14 @@ describe('tick - trackingCheck readiness', () => {
 
   it('transitions to snip after the auto-countdown elapses', () => {
     const g = bothHands(0.2, 0.3, 0.7, 0.8);
-    let s: GameState = { phase: 'trackingCheck', p1Name: 'A', p2Name: 'B', p1Ready: 0, p2Ready: 0, autoCountdownMs: null };
+    let s: GameState = {
+      phase: 'trackingCheck',
+      p1Name: 'A',
+      p2Name: 'B',
+      p1Ready: 0,
+      p2Ready: 0,
+      autoCountdownMs: null
+    };
     // Need ~5 seconds total: 2s for readiness + 3s auto-countdown.
     for (let i = 0; i < 30; i++) s = tick(s, { type: 'tick', dtMs: 200 }, g);
     expect(s.phase).toBe('snip');
@@ -67,10 +105,22 @@ describe('tick - trackingCheck readiness', () => {
 describe('tick - snip', () => {
   it('enters framing when one hand holds', () => {
     const g: GestureSnapshot = {
-      p1: { left: { present: true, pinch: 'holding', cursor: { x: 0.1, y: 0.2 } }, right: { present: true, pinch: 'idle', cursor: { x: 0.4, y: 0.5 } } },
-      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p1: {
+        left: { present: true, pinch: 'holding', cursor: { x: 0.1, y: 0.2 } },
+        right: { present: true, pinch: 'idle', cursor: { x: 0.4, y: 0.5 } }
+      },
+      p2: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
-    const s0: GameState = { phase: 'snip', p1Name: 'A', p2Name: 'B', p1: { kind: 'idle' }, p2: { kind: 'idle' } };
+    const s0: GameState = {
+      phase: 'snip',
+      p1Name: 'A',
+      p2Name: 'B',
+      p1: { kind: 'idle' },
+      p2: { kind: 'idle' }
+    };
     const s = tick(s0, { type: 'tick', dtMs: 16 }, g);
     if (s.phase === 'snip' && s.p1.kind === 'framing') {
       expect(s.p1.corner1).toEqual({ x: 0.1, y: 0.2 });
@@ -82,14 +132,25 @@ describe('tick - snip', () => {
 
   it('locks the snip after both hands hold for 1500 ms over a large enough rect', () => {
     const g: GestureSnapshot = {
-      p1: { left: { present: true, pinch: 'holding', cursor: { x: 0.05, y: 0.1 } }, right: { present: true, pinch: 'holding', cursor: { x: 0.45, y: 0.9 } } },
-      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p1: {
+        left: { present: true, pinch: 'holding', cursor: { x: 0.05, y: 0.1 } },
+        right: { present: true, pinch: 'holding', cursor: { x: 0.45, y: 0.9 } }
+      },
+      p2: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
     let s: GameState = {
       phase: 'snip',
       p1Name: 'A',
       p2Name: 'B',
-      p1: { kind: 'framing', corner1: { x: 0.05, y: 0.1 }, corner2: { x: 0.45, y: 0.9 }, holdMs: 1499 },
+      p1: {
+        kind: 'framing',
+        corner1: { x: 0.05, y: 0.1 },
+        corner2: { x: 0.45, y: 0.9 },
+        holdMs: 1499
+      },
       p2: { kind: 'idle' }
     };
     s = tick(s, { type: 'tick', dtMs: 16 }, g);
@@ -151,7 +212,10 @@ describe('tick - solve drag/drop', () => {
     const c = cell % 3;
     const localX = (c + 0.5) / 3;
     const localY = (r + 0.5) / 3;
-    const a = player === 'p1' ? { x: 0.06, y: 0.18, w: 0.38, h: 0.74 } : { x: 0.56, y: 0.18, w: 0.38, h: 0.74 };
+    const a =
+      player === 'p1'
+        ? { x: 0.06, y: 0.18, w: 0.38, h: 0.74 }
+        : { x: 0.56, y: 0.18, w: 0.38, h: 0.74 };
     return { x: a.x + localX * a.w, y: a.y + localY * a.h };
   }
   function boardLocalAtCell(cell: number) {
@@ -174,7 +238,10 @@ describe('tick - solve drag/drop', () => {
         left: { present: true, pinch: 'holding', cursor: imageCursorOverCell(0, 'p1') },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
-      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p2: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
     const s = tick(s0, { type: 'tick', dtMs: 16 }, g);
     if (s.phase === 'solve') {
@@ -204,7 +271,10 @@ describe('tick - solve drag/drop', () => {
         left: { present: true, pinch: 'idle', cursor: imageCursorOverCell(8, 'p1') },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
-      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p2: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
     const s = tick(s0, { type: 'tick', dtMs: 16 }, g);
     if (s.phase === 'solve') {
@@ -237,7 +307,10 @@ describe('tick - solve drag/drop', () => {
         left: { present: true, pinch: 'idle', cursor: imageCursorOverCell(4, 'p1') },
         right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
       },
-      p2: { left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }, right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } } }
+      p2: {
+        left: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } },
+        right: { present: false, pinch: 'idle', cursor: { x: 0, y: 0 } }
+      }
     };
     const s = tick(s0, { type: 'tick', dtMs: 16 }, g);
     if (s.phase === 'solve') {

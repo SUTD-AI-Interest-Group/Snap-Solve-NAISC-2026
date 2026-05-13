@@ -15,10 +15,10 @@
   });
 </script>
 
-<div class="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+<div class="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
   <div
     bind:this={labelEl}
-    class="font-display text-[12rem] leading-none bg-black/70 rounded-3xl px-20 py-8 shadow-2xl drop-shadow-[0_8px_0_rgba(0,0,0,0.5)]"
+    class="font-display rounded-3xl bg-black/70 px-20 py-8 text-[12rem] leading-none shadow-2xl drop-shadow-[0_8px_0_rgba(0,0,0,0.5)]"
     style="color: var(--color-accent);"
   >
     {label}

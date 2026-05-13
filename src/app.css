@@ -10,11 +10,11 @@
 }
 
 :root {
-  --color-bg: oklch(0.97 0.02 80);            /* warm cream / offwhite */
-  --color-ink: oklch(0.22 0.03 50);           /* warm charcoal */
-  --color-primary: oklch(0.74 0.19 50);       /* bright orange */
+  --color-bg: oklch(0.97 0.02 80); /* warm cream / offwhite */
+  --color-ink: oklch(0.22 0.03 50); /* warm charcoal */
+  --color-primary: oklch(0.74 0.19 50); /* bright orange */
   --color-p1: var(--color-primary);
-  --color-p2: oklch(0.65 0.18 245);           /* vivid blue */
+  --color-p2: oklch(0.65 0.18 245); /* vivid blue */
   --color-accent-green: oklch(0.78 0.18 145);
   --color-accent-yellow: oklch(0.88 0.18 95);
   --color-canvas-bg: var(--color-ink);
@@ -23,7 +23,8 @@
   --color-accent: var(--color-accent-yellow);
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   overflow: hidden;
@@ -37,8 +38,13 @@ body {
 
 /* Subtle wobble so chunky display headings feel kinetic */
 @keyframes wobble-tilt {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
 }
 
 /* Used by Splash + any "menu" screen that wants the cream background.
@@ -51,24 +57,49 @@ body {
 /* === Splash idle-loop keyframes === */
 
 @keyframes splash-hand-pinch {
-  0%, 70%, 100% { transform: scaleX(var(--scale-x, 1)) scale(1) rotate(0deg); }
-  80% { transform: scaleX(var(--scale-x, 1)) scale(0.92) rotate(4deg); }
-  90% { transform: scaleX(var(--scale-x, 1)) scale(1.02) rotate(-2deg); }
+  0%,
+  70%,
+  100% {
+    transform: scaleX(var(--scale-x, 1)) scale(1) rotate(0deg);
+  }
+  80% {
+    transform: scaleX(var(--scale-x, 1)) scale(0.92) rotate(4deg);
+  }
+  90% {
+    transform: scaleX(var(--scale-x, 1)) scale(1.02) rotate(-2deg);
+  }
 }
 
 @keyframes splash-char-bob {
-  0%, 100% { transform: scaleX(var(--scale-x, 1)) translateY(0); }
-  50% { transform: scaleX(var(--scale-x, 1)) translateY(-4px); }
+  0%,
+  100% {
+    transform: scaleX(var(--scale-x, 1)) translateY(0);
+  }
+  50% {
+    transform: scaleX(var(--scale-x, 1)) translateY(-4px);
+  }
 }
 
 @keyframes splash-cta-pulse {
-  0%, 100% { opacity: 0.92; filter: brightness(1); }
-  50% { opacity: 1; filter: brightness(1.06); }
+  0%,
+  100% {
+    opacity: 0.92;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.06);
+  }
 }
 
 @keyframes splash-accent-shift {
-  0%, 100% { background: linear-gradient(90deg, var(--color-accent-green), var(--color-accent-yellow)); }
-  50%      { background: linear-gradient(90deg, var(--color-accent-yellow), var(--color-accent-green)); }
+  0%,
+  100% {
+    background: linear-gradient(90deg, var(--color-accent-green), var(--color-accent-yellow));
+  }
+  50% {
+    background: linear-gradient(90deg, var(--color-accent-yellow), var(--color-accent-green));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

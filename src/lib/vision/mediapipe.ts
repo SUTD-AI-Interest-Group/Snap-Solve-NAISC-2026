@@ -1,4 +1,8 @@
-import { FilesetResolver, HandLandmarker, type HandLandmarkerResult } from '@mediapipe/tasks-vision';
+import {
+  FilesetResolver,
+  HandLandmarker,
+  type HandLandmarkerResult
+} from '@mediapipe/tasks-vision';
 import type { Hand } from './types';
 
 let landmarker: HandLandmarker | null = null;

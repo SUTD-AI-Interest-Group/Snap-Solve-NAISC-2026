@@ -45,14 +45,23 @@ function openDb(): Promise<IDBDatabase> {
         // Migrate from v1: { id, name, timeMs, date }
         const store = tx.objectStore(STORE_NAME);
         // Try to drop the old timeMs index if it exists.
-        try { store.deleteIndex('timeMs'); } catch { /* not present */ }
+        try {
+          store.deleteIndex('timeMs');
+        } catch {
+          /* not present */
+        }
         store.createIndex('bestTimeMs', 'bestTimeMs', { unique: false });
         store.createIndex('nameLower', 'nameLower', { unique: true });
 
         // Read all old rows; dedup by lower(name) keeping min(timeMs).
         const all = store.getAll();
         all.onsuccess = () => {
-          const rows = (all.result as Array<{ id: number; name: string; timeMs: number; date?: string }>);
+          const rows = all.result as Array<{
+            id: number;
+            name: string;
+            timeMs: number;
+            date?: string;
+          }>;
           const byKey = new Map<string, { name: string; bestTimeMs: number; updatedAt: string }>();
           for (const r of rows) {
             const key = (r.name ?? '').trim().toLowerCase();
@@ -102,7 +111,12 @@ export async function recordWin(
       const existing = lookup.result as Score | undefined;
       const now = new Date().toISOString();
       if (!existing) {
-        store.add({ name: norm.name, nameLower: norm.nameLower, bestTimeMs: timeMs, updatedAt: now });
+        store.add({
+          name: norm.name,
+          nameLower: norm.nameLower,
+          bestTimeMs: timeMs,
+          updatedAt: now
+        });
         tx.oncomplete = () => resolve(true);
         tx.onerror = () => reject(tx.error);
         return;

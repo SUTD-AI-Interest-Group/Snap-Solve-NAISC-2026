@@ -45,10 +45,7 @@ export function swap(b: Board, a: number, c: number): Board {
   return next;
 }
 
-export function scrambleSwap(
-  rng: () => number = Math.random,
-  minOutOfPlace = 7
-): Board {
+export function scrambleSwap(rng: () => number = Math.random, minOutOfPlace = 7): Board {
   const cap = Math.min(minOutOfPlace, CELLS);
   for (let attempts = 0; attempts < 1000; attempts++) {
     const cells: PieceId[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];

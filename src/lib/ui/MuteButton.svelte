@@ -11,7 +11,7 @@
 </script>
 
 <button
-  class="fixed top-4 right-4 z-50 size-12 rounded-full bg-black/40 hover:bg-black/60 text-2xl flex items-center justify-center transition-all active:scale-90"
+  class="fixed top-4 right-4 z-50 flex size-12 items-center justify-center rounded-full bg-black/40 text-2xl transition-all hover:bg-black/60 active:scale-90"
   onclick={toggle}
   aria-label={muted.value ? 'Unmute' : 'Mute'}
 >

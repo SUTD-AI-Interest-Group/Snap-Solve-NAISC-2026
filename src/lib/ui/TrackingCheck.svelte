@@ -10,31 +10,55 @@
   let p2Name = $derived(game.state.phase === 'trackingCheck' ? game.state.p2Name : '');
 </script>
 
-<div class="absolute inset-0 pointer-events-none z-20">
+<div class="pointer-events-none absolute inset-0 z-20">
   <div class="absolute inset-y-0 left-1/2 w-px bg-white/30"></div>
   <div class="absolute top-8 left-0 w-1/2 px-8">
-    <h3 class="font-display text-4xl md:text-5xl mb-3 text-center tracking-tight" style="color: var(--color-p1)">{p1Name}</h3>
-    <p class="font-sans text-center text-lg md:text-xl font-medium opacity-85 mb-4">Hold both hands in view</p>
-    <div class="w-full h-4 bg-white/10 rounded-full overflow-hidden">
+    <h3
+      class="font-display mb-3 text-center text-4xl tracking-tight md:text-5xl"
+      style="color: var(--color-p1)"
+    >
+      {p1Name}
+    </h3>
+    <p class="mb-4 text-center font-sans text-lg font-medium opacity-85 md:text-xl">
+      Hold both hands in view
+    </p>
+    <div class="h-4 w-full overflow-hidden rounded-full bg-white/10">
       <div
         class="h-full transition-[width] duration-100"
-        style="width: {Math.min(100, (p1Ready / READY_TARGET) * 100)}%; background: var(--color-p1);"
+        style="width: {Math.min(
+          100,
+          (p1Ready / READY_TARGET) * 100
+        )}%; background: var(--color-p1);"
       ></div>
     </div>
   </div>
   <div class="absolute top-8 right-0 w-1/2 px-8">
-    <h3 class="font-display text-4xl md:text-5xl mb-3 text-center tracking-tight" style="color: var(--color-p2)">{p2Name}</h3>
-    <p class="font-sans text-center text-lg md:text-xl font-medium opacity-85 mb-4">Hold both hands in view</p>
-    <div class="w-full h-4 bg-white/10 rounded-full overflow-hidden">
+    <h3
+      class="font-display mb-3 text-center text-4xl tracking-tight md:text-5xl"
+      style="color: var(--color-p2)"
+    >
+      {p2Name}
+    </h3>
+    <p class="mb-4 text-center font-sans text-lg font-medium opacity-85 md:text-xl">
+      Hold both hands in view
+    </p>
+    <div class="h-4 w-full overflow-hidden rounded-full bg-white/10">
       <div
         class="h-full transition-[width] duration-100"
-        style="width: {Math.min(100, (p2Ready / READY_TARGET) * 100)}%; background: var(--color-p2);"
+        style="width: {Math.min(
+          100,
+          (p2Ready / READY_TARGET) * 100
+        )}%; background: var(--color-p2);"
       ></div>
     </div>
   </div>
   {#if auto !== null}
     <div class="absolute inset-0 flex items-center justify-center">
-      <div class="font-display text-[10rem] leading-none bg-black/70 rounded-3xl px-16 py-8 drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]">{Math.ceil(auto / 1000)}</div>
+      <div
+        class="font-display rounded-3xl bg-black/70 px-16 py-8 text-[10rem] leading-none drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]"
+      >
+        {Math.ceil(auto / 1000)}
+      </div>
     </div>
   {/if}
 </div>

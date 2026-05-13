@@ -13,7 +13,13 @@
     children?: Snippet;
   }
 
-  let { variant = 'default', size = 'default', class: className = '', children, ...rest }: Props = $props();
+  let {
+    variant = 'default',
+    size = 'default',
+    class: className = '',
+    children,
+    ...rest
+  }: Props = $props();
 
   const variants: Record<Variant, string> = {
     default:
@@ -32,7 +38,7 @@
 
 <button
   class={cn(
-    'inline-flex items-center justify-center rounded-2xl font-display tracking-wide transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-[0_4px_0_rgba(34,27,22,0.25)] hover:translate-y-[1px] hover:shadow-[0_3px_0_rgba(34,27,22,0.25)] active:translate-y-[3px] active:shadow-[0_1px_0_rgba(34,27,22,0.25)]',
+    'font-display inline-flex items-center justify-center rounded-2xl tracking-wide shadow-[0_4px_0_rgba(34,27,22,0.25)] transition-all hover:translate-y-[1px] hover:shadow-[0_3px_0_rgba(34,27,22,0.25)] active:translate-y-[3px] active:scale-95 active:shadow-[0_1px_0_rgba(34,27,22,0.25)] disabled:pointer-events-none disabled:opacity-50',
     variants[variant],
     sizes[size],
     className
