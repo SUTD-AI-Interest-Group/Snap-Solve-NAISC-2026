@@ -4,7 +4,7 @@
   import { tick as gameTick } from '$lib/game/tick';
   import { EMPTY_GESTURES } from '$lib/game/state';
   import { animate, createTimeline, stagger } from 'animejs';
-  import { onMount, tick } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import { recordWin } from '$lib/db/leaderboard';
 
   let r = $derived(game.state.phase === 'result' ? game.state : null);
@@ -25,6 +25,10 @@
   let titleEl: HTMLHeadingElement | undefined = $state();
   let confettiEl: HTMLDivElement | undefined = $state();
   let highlightRank = $state<number | null>(null);
+  // Tracks the looping highlight animation so we can stop it when the
+  // result screen unmounts (rematch / new players). Without this the rAF
+  // loop keeps running across phase transitions.
+  let highlightAnim: ReturnType<typeof animate> | null = null;
 
   onMount(() => {
     if (titleEl) animate(titleEl, { scale: [0.4, 1], opacity: [0, 1], duration: 700, ease: 'outBack' });
@@ -68,7 +72,7 @@
       }
       // Loop the highlight for new score
       if (document.querySelectorAll('.new-score-row').length > 0) {
-        animate('.new-score-row', {
+        highlightAnim = animate('.new-score-row', {
           backgroundColor: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.15)'],
           direction: 'alternate',
           loop: true,
@@ -77,6 +81,15 @@
         });
       }
     })();
+  });
+
+  onDestroy(() => {
+    // animejs v4 instances expose .pause() / .cancel(); pause is sufficient
+    // to halt the rAF loop. Guard for both to stay forward-compatible.
+    const a = highlightAnim as unknown as { pause?: () => void; cancel?: () => void } | null;
+    a?.pause?.();
+    a?.cancel?.();
+    highlightAnim = null;
   });
 </script>
 

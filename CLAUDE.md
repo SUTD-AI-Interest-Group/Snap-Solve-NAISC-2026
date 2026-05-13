@@ -19,7 +19,7 @@ npm test             # vitest unit tests (pure logic only)
 npm run test:watch   # vitest in watch mode
 ```
 
-Run a single test file: `npx vitest run src/lib/game/board.test.ts`
+Run a single test file: `npx vitest run tests/unit/board.test.ts`
 
 Run smoke tests manually before committing to main — see `docs/smoke-test.md`.
 
@@ -37,7 +37,7 @@ webcam → MediaPipe → frameLoop → gesture layer → game tick → canvas re
 
 **`src/lib/gesture/`** — Pure hand-geometry functions. `assign.ts` splits detected hands into p1 (wristX < 0.5) and p2 (wristX ≥ 0.5). `pinch.ts` tracks a pinch state machine (idle → pinching → holding). `cursor.ts` derives the cursor point from the hand.
 
-**`src/lib/game/`** — Pure game logic (no DOM, no side effects). `state.ts` defines the `GameState` discriminated union and all event/gesture types. `tick.ts` is the main reducer: `tick(state, event, gestures) → state`. `board.ts` manages the 3×3 `Board` (cells, correctCount, drag state). `snip.ts` handles rect geometry. `slicer.ts` cuts an `ImageBitmap` into 9 pieces. `history.ts` persists results to localStorage.
+**`src/lib/game/`** — Pure game logic (no DOM, no side effects). `state.ts` defines the `GameState` discriminated union and all event/gesture types. `tick.ts` is the main reducer: `tick(state, event, gestures) → state`. `board.ts` manages the 3×3 `Board` (cells, correctCount, drag state). `snip.ts` handles rect geometry. `slicer.ts` cuts an `ImageBitmap` into 9 pieces. `history.ts` is a small in-memory result log (no persistence) — superseded by the IndexedDB leaderboard.
 
 **`src/lib/render/`** — Canvas drawing functions. All drawing goes through `App.svelte`'s single `<canvas>` overlay. `drawPuzzle.ts` renders boards; `drawCursor.ts` renders per-player pointers; `drawSnipRect.ts` renders the framing overlay.
 
