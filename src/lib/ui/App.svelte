@@ -411,7 +411,6 @@
     }
   }
 
-
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       // Pause is meaningful from the moment the live game starts.
