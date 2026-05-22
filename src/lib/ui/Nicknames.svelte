@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { game } from '$lib/store.svelte';
+  import { game, camera } from '$lib/store.svelte';
   import { tick as gameTick } from '$lib/game/tick';
   import { EMPTY_GESTURES } from '$lib/game/state';
   import { Button } from '$lib/components/ui/button';
@@ -7,6 +7,11 @@
 
   let p1 = $state('');
   let p2 = $state('');
+
+  // Fall back to a readable label when the browser hasn't supplied one.
+  function cameraLabel(d: MediaDeviceInfo, i: number): string {
+    return d.label || `Camera ${i + 1}`;
+  }
 
   const canSubmit = $derived(
     p1.trim().length > 0 && p1.length <= 12 && p2.trim().length > 0 && p2.length <= 12
@@ -77,4 +82,24 @@
     </div>
   </div>
   <Button size="lg" disabled={!canSubmit} onclick={submit}>Let's go!</Button>
+
+  {#if camera.list.length > 1}
+    <div class="flex flex-col items-center gap-2">
+      <label
+        for="camera-select"
+        class="font-sans text-sm tracking-wide opacity-60"
+        style="color: var(--color-ink);">Camera</label
+      >
+      <select
+        id="camera-select"
+        bind:value={camera.selectedId}
+        class="max-w-xs rounded-xl border-2 bg-transparent px-4 py-2 font-sans text-base"
+        style="border-color: var(--color-ink); color: var(--color-ink);"
+      >
+        {#each camera.list as device, i (device.deviceId)}
+          <option value={device.deviceId}>{cameraLabel(device, i)}</option>
+        {/each}
+      </select>
+    </div>
+  {/if}
 </section>

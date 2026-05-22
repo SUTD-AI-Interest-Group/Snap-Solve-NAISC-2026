@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { openWebcam, type WebcamHandle } from '$lib/vision/webcam';
+  import { openWebcam, listCameras, type WebcamHandle } from '$lib/vision/webcam';
+  import { saveCameraId } from '$lib/vision/cameraStorage';
   import { initHandLandmarker } from '$lib/vision/mediapipe';
   import { startFrameLoop } from '$lib/vision/frameLoop';
-  import { game, paused } from '$lib/store.svelte';
+  import { game, paused, camera } from '$lib/store.svelte';
   import { tick as gameTick, getBoardArea } from '$lib/game/tick';
   import { normalizedPinchDistance, advancePinchState, type PinchState } from '$lib/gesture/pinch';
   import { getCursorPoint } from '$lib/gesture/cursor';
@@ -23,6 +24,7 @@
 
   import Splash from './Splash.svelte';
   import Nicknames from './Nicknames.svelte';
+  import RotatePrompt from './RotatePrompt.svelte';
   import TrackingCheck from './TrackingCheck.svelte';
   import SnipPhase from './SnipPhase.svelte';
   import Countdown from './Countdown.svelte';
@@ -34,6 +36,10 @@
 
   let cam: WebcamHandle | null = null;
   let stopLoop: (() => void) | null = null;
+  // deviceId of the currently-open camera; lets us tell a real switch apart
+  // from the selector simply reflecting the active camera.
+  let currentDeviceId: string | null = null;
+  let switching = false;
   let permError = $state<string | null>(null);
   let trackingError = $state<string | null>(null);
   let initializing = $state(true);
@@ -90,18 +96,45 @@
 
     // 2. Camera — this is the only step that legitimately maps to "camera access needed".
     try {
-      cam = await openWebcam();
+      cam = await openWebcam(camera.selectedId ?? undefined);
     } catch (e) {
-      if (myToken !== initToken) return;
-      permError = describeCameraError(e);
-      initializing = false;
-      return;
+      // A stored camera may have been unplugged since last session; fall back
+      // to the default once before surfacing an error.
+      if (camera.selectedId) {
+        try {
+          cam = await openWebcam();
+          camera.selectedId = null;
+          saveCameraId(null);
+        } catch {
+          if (myToken !== initToken) return;
+          permError = describeCameraError(e);
+          initializing = false;
+          return;
+        }
+      } else {
+        if (myToken !== initToken) return;
+        permError = describeCameraError(e);
+        initializing = false;
+        return;
+      }
     }
     if (myToken !== initToken) {
       cam?.stop();
       cam = null;
       return;
     }
+    // Record the camera we actually opened, then enumerate the rest. Labels
+    // only populate after permission is granted, so this must come after open.
+    currentDeviceId = activeDeviceId(cam) ?? camera.selectedId;
+    saveCameraId(currentDeviceId);
+    camera.list = await listCameras();
+    if (myToken !== initToken) {
+      cam?.stop();
+      cam = null;
+      return;
+    }
+    // Reflect the live camera in the selector without retriggering a switch.
+    if (camera.selectedId !== currentDeviceId) camera.selectedId = currentDeviceId;
 
     // 3. MediaPipe — wasm + model load. Separate error category.
     try {
@@ -122,6 +155,16 @@
     }
 
     // 4. Start the frame loop.
+    startLoop();
+    initializing = false;
+  }
+
+  function activeDeviceId(c: WebcamHandle): string | null {
+    return c.stream.getVideoTracks()[0]?.getSettings().deviceId ?? null;
+  }
+
+  function startLoop() {
+    if (!cam) return;
     stopLoop = startFrameLoop({
       video: cam.video,
       onFrame: (frame, dt) => {
@@ -136,8 +179,47 @@
         draw();
       }
     });
-    initializing = false;
   }
+
+  // Re-open the webcam on a different device, reusing the already-loaded
+  // MediaPipe model. Driven by the camera selector on the Nicknames screen.
+  async function switchCamera(deviceId: string) {
+    if (switching || initializing || !stopLoop) return;
+    switching = true;
+    const prevId = currentDeviceId;
+    stopLoop();
+    stopLoop = null;
+    cam?.stop();
+    cam = null;
+    try {
+      cam = await openWebcam(deviceId);
+      currentDeviceId = activeDeviceId(cam) ?? deviceId;
+      saveCameraId(currentDeviceId);
+      camera.list = await listCameras();
+      startLoop();
+    } catch (e) {
+      // Switch failed (camera busy / removed). Restore the previous camera.
+      try {
+        cam = await openWebcam(prevId ?? undefined);
+        currentDeviceId = activeDeviceId(cam) ?? prevId;
+        saveCameraId(currentDeviceId);
+        camera.selectedId = currentDeviceId;
+        startLoop();
+      } catch {
+        permError = describeCameraError(e);
+      }
+    } finally {
+      switching = false;
+    }
+  }
+
+  // React to the user picking a different camera in the selector.
+  $effect(() => {
+    const id = camera.selectedId;
+    if (id && id !== currentDeviceId && stopLoop && !switching && !initializing) {
+      switchCamera(id);
+    }
+  });
 
   function retry() {
     init();
@@ -439,6 +521,7 @@
 
 <MuteButton />
 <OfflineIndicator />
+<RotatePrompt />
 
 {#if permError || trackingError}
   <div
