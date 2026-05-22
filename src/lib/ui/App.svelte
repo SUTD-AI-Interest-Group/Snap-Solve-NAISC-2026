@@ -4,7 +4,7 @@
   import { saveCameraId } from '$lib/vision/cameraStorage';
   import { initHandLandmarker } from '$lib/vision/mediapipe';
   import { startFrameLoop } from '$lib/vision/frameLoop';
-  import { game, paused, camera } from '$lib/store.svelte';
+  import { game, paused, camera, volume } from '$lib/store.svelte';
   import { tick as gameTick, getBoardArea } from '$lib/game/tick';
   import { normalizedPinchDistance, advancePinchState, type PinchState } from '$lib/gesture/pinch';
   import { getCursorPoint } from '$lib/gesture/cursor';
@@ -18,8 +18,8 @@
   import { drawCursor, drawPointer } from '$lib/render/drawCursor';
   import type { Frame, Hand, PlayerHands, PlayerId } from '$lib/vision/types';
   import type { HandGesture, GestureSnapshot } from '$lib/game/state';
-  import { preloadSfx, playSfx } from '$lib/audio/sfx';
-  import { playMusic } from '$lib/audio/music';
+  import { preloadSfx, playSfx, setSfxVolume } from '$lib/audio/sfx';
+  import { playMusic, setMusicVolume } from '$lib/audio/music';
   import { fade } from 'svelte/transition';
 
   import Splash from './Splash.svelte';
@@ -88,6 +88,8 @@
     // 1. Audio (best-effort, never fatal).
     try {
       await preloadSfx();
+      setSfxVolume(volume.value);
+      setMusicVolume(volume.value);
       playMusic('lobby');
     } catch (e) {
       console.warn('audio init failed (continuing):', e);
@@ -495,12 +497,17 @@
 
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
-      // Pause is meaningful from the moment the live game starts.
+      // The ESC menu is available from hand calibration through the end of the
+      // game — every phase except the splash/nicknames lobby screens.
       const p = game.state.phase;
-      if (p === 'trackingCheck' || p === 'snip' || p === 'countdown' || p === 'solve') {
+      if (
+        p === 'trackingCheck' ||
+        p === 'snip' ||
+        p === 'countdown' ||
+        p === 'solve' ||
+        p === 'result'
+      ) {
         paused.value = !paused.value;
-      } else if (p === 'result' && paused.value) {
-        paused.value = false;
       }
     }
   }

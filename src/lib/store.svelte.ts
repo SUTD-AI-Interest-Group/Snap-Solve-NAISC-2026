@@ -1,9 +1,12 @@
 import { initialState, type GameState } from './game/state';
 import { getTopScores, type Score } from './db/leaderboard';
 import { loadCameraId } from './vision/cameraStorage';
+import { loadVolume } from './audio/volumeStorage';
 
 export const game = $state<{ state: GameState }>({ state: initialState });
 export const muted = $state<{ value: boolean }>({ value: false });
+// Master audio volume (0–1), seeded from localStorage and applied on init.
+export const volume = $state<{ value: number }>({ value: loadVolume() });
 export const paused = $state<{ value: boolean }>({ value: false });
 export const leaderboard = $state<{ scores: Score[] }>({ scores: [] });
 
