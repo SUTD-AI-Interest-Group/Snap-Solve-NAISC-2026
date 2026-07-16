@@ -5,7 +5,15 @@
 
 A 2-player, hand-tracked sliding-puzzle game for the SUTD AI student conference (NAISC). Players stand side-by-side at one laptop with one webcam, frame a "snip" of the camera view with two-handed pinch gestures, then race to reassemble that snip as a 3×3 sliding puzzle — also using pinch-and-drag.
 
-![Snap & Solve gameplay](docs/gameplay.png)
+## Screens
+
+<p align="center">
+  <img src="docs/screenshots/splash.png" alt="Snap & Solve title screen" width="32%" />
+  <img src="docs/screenshots/player-setup.png" alt="Player nickname setup screen" width="32%" />
+  <img src="docs/screenshots/tracking-check.png" alt="Live hand-tracking calibration screen" width="32%" />
+</p>
+
+From left to right: the title screen, player setup, and the live two-player hand-tracking check before each round.
 
 Built with **Svelte 5 + SvelteKit 2 + TypeScript + Tailwind v4 + anime.js v4 + MediaPipe Tasks Vision**.
 
